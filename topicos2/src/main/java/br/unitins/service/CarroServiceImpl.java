@@ -41,6 +41,11 @@ public class CarroServiceImpl implements CarroService {
     }
 
     @Override
+    public Carro findById(Long id) {
+        return carroRepository.findById(id);
+    }
+
+    @Override
     @Transactional 
     public void update(Long id, CarroRequestDTO dto) {
         Carro carro = carroRepository.findById(id);

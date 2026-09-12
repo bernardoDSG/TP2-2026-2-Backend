@@ -9,6 +9,7 @@ public interface CarroService {
     
     List<Carro> findAll(Integer page, Integer pageSize);
     List<Carro> findByNome(String nome, Integer page, Integer pageSize);
+    Carro findById(Long id);
     Carro create(CarroRequestDTO dto);
     void update(Long id, CarroRequestDTO dto);
     void delete(Long id);
