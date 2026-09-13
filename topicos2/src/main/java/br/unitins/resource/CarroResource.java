@@ -52,13 +52,13 @@ public class CarroResource {
 
     @PUT
     @Path("/{id}")
-    public void update(Long id, CarroRequestDTO dto) {
+    public void update(@PathParam("id") Long id, CarroRequestDTO dto) {
         carroService.update(id, dto);
     }
 
     @DELETE
     @Path("/{id}")
-    public void delete(Long id) {
+    public void delete(@PathParam("id") Long id) {
         carroService.delete(id);
     }
 

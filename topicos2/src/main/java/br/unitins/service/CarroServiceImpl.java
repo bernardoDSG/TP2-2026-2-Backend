@@ -6,6 +6,7 @@ import br.unitins.dto.CarroRequestDTO;
 import br.unitins.model.Carro;
 import br.unitins.model.StatusUso;
 import br.unitins.repository.CarroRepository;
+import br.unitins.repository.CorRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -16,6 +17,9 @@ public class CarroServiceImpl implements CarroService {
 
     @Inject
     CarroRepository carroRepository;
+
+    @Inject
+    CorRepository corRepository;
 
     @Override
     public List<Carro> findAll(Integer page, Integer pageSize) {
@@ -36,6 +40,7 @@ public class CarroServiceImpl implements CarroService {
         Carro carro = new Carro();
         carro.setNome(dto.nome());
         carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
+        carro.setCor(corRepository.findById(dto.corId()));
         carroRepository.persist(carro);
         return carro;
     }
@@ -52,6 +57,8 @@ public class CarroServiceImpl implements CarroService {
         if (carro == null)
             return;
         carro.setNome(dto.nome());
+        carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
+        carro.setCor(corRepository.findById(dto.corId()));
 
     }
 

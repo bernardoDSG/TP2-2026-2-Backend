@@ -13,6 +13,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -49,13 +50,13 @@ public class CorResource {
 
     @PUT
     @Path("/{id}")
-    public void update(Long id, CorRequestDTO cor) {
+    public void update(@PathParam("id") Long id, CorRequestDTO cor) {
         corService.update(id, cor);
     }
 
     @DELETE
     @Path("/{id}")
-    public void delete(Long id) {
+    public void delete(@PathParam("id") Long id) {
         corService.delete(id);
     }
 
