@@ -9,7 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class CorRepository implements PanacheRepository<Cor> {
 
     public PanacheQuery<Cor> findByNome(String nome) {
-        return find("SELECT c FROM Cor c WHERE c.nome LIKE ?1 ", "%" + nome + "%");
+        return find("SELECT c FROM Cor c WHERE LOWER(c.nome) LIKE LOWER(?1)", "%" + nome + "%");
     }
 
     

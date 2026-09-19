@@ -27,19 +27,19 @@ public class CorResource {
     CorService corService;
 
     @GET
-    public List<Cor> buscarTodas(@QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("100") Integer pageSize) {
+    public List<Cor> buscarTodas(@QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return corService.findAll(page, pageSize);
     }
 
     @GET
     @Path("/nome/{nome}")
-    public List<Cor> buscarPorNome(@QueryParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("100") Integer pageSize) {
+    public List<Cor> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return corService.findByNome(nome, page, pageSize);
     }
 
     @GET
     @Path("/{id}")
-    public Cor buscarPorId(@QueryParam("id") Long id) {
+    public Cor buscarPorId(@PathParam("id") Long id) {
         return corService.findById(id);
     }
 

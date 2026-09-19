@@ -35,6 +35,16 @@ public class CarroServiceImpl implements CarroService {
     }
 
     @Override
+    public List<Carro> findByStatusUso(StatusUso statusUso, Integer page, Integer pageSize) {
+        return carroRepository.findByStatusUso(statusUso).page(page, pageSize).list();
+    }
+
+    @Override
+    public List<Carro> findByCor(Long corId, Integer page, Integer pageSize) {
+        return carroRepository.findByCor(corId).page(page, pageSize).list();
+    }
+
+    @Override
     @Transactional
     public Carro create(CarroRequestDTO dto) {
         Carro carro = new Carro();
