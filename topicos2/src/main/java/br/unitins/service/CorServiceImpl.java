@@ -52,6 +52,11 @@ public class CorServiceImpl implements CorService {
     }
 
     @Override
+    public List<Cor> findByTonalidade(Tonalidade tonalidade, Integer page, Integer pageSize) {
+        return corRepository.findByTonalidade(tonalidade).page(page, pageSize).list();
+    }
+
+    @Override
     @Transactional
     public void update(Long id, CorRequestDTO dto) {
         Cor cor = corRepository.findById(id);

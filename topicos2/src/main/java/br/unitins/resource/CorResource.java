@@ -4,6 +4,7 @@ import java.util.List;
 
 import br.unitins.dto.CorRequestDTO;
 import br.unitins.model.Cor;
+import br.unitins.model.Tonalidade;
 import br.unitins.service.CorService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -35,6 +36,14 @@ public class CorResource {
     @Path("/nome/{nome}")
     public List<Cor> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return corService.findByNome(nome, page, pageSize);
+    }
+
+    @GET
+    @Path("/tonalidade/{tonalidadeId}")
+    public List<Cor> buscarPorTonalidade(@PathParam("tonalidadeId") Long tonalidadeId,
+            @QueryParam("page") @DefaultValue("0") Integer page,
+            @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return corService.findByTonalidade(Tonalidade.valueOf(tonalidadeId), page, pageSize);
     }
 
     @GET
