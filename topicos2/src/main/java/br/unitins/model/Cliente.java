@@ -1,9 +1,12 @@
 package br.unitins.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class Cliente extends DefaultEntity {
@@ -20,24 +23,8 @@ public class Cliente extends DefaultEntity {
     @Column(nullable = false, length = 11)
     private String telefone;
 
-    @Column(nullable = false, length = 8)
-    private String cep;
-
-    @Column(nullable = false, length = 160)
-    private String logradouro;
-
-    @Column(nullable = false, length = 20)
-    private String numero;
-
-    @Column(length = 100)
-    private String complemento;
-
-    @Column(nullable = false, length = 100)
-    private String bairro;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "municipio_id", nullable = false)
-    private Municipio municipio;
+    @OneToMany(mappedBy = "cliente", fetch = FetchType.EAGER, cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    private List<Endereco> enderecos = new ArrayList<>();
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
@@ -47,16 +34,12 @@ public class Cliente extends DefaultEntity {
     public void setEmail(String email) { this.email = email; }
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
-    public String getCep() { return cep; }
-    public void setCep(String cep) { this.cep = cep; }
-    public String getLogradouro() { return logradouro; }
-    public void setLogradouro(String logradouro) { this.logradouro = logradouro; }
-    public String getNumero() { return numero; }
-    public void setNumero(String numero) { this.numero = numero; }
-    public String getComplemento() { return complemento; }
-    public void setComplemento(String complemento) { this.complemento = complemento; }
-    public String getBairro() { return bairro; }
-    public void setBairro(String bairro) { this.bairro = bairro; }
-    public Municipio getMunicipio() { return municipio; }
-    public void setMunicipio(Municipio municipio) { this.municipio = municipio; }
+    public List<Endereco> getEnderecos() { return enderecos; }
+    public void setEnderecos(List<Endereco> enderecos) {
+        this.enderecos.clear();
+        for (Endereco endereco : enderecos) {
+            endereco.setCliente(this);
+            this.enderecos.add(endereco);
+        }
+    }
 }

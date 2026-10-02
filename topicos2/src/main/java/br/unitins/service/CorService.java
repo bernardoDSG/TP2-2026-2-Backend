@@ -14,5 +14,5 @@ public interface CorService {
     Cor findById(Long id);
     Cor create(CorRequestDTO dto);
     void update(Long id, CorRequestDTO dto);
-    void delete(Long id);
+    void delete(Long id, Long replacementColorId);
 }

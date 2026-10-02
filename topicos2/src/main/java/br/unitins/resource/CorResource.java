@@ -65,8 +65,10 @@ public class CorResource {
 
     @DELETE
     @Path("/{id}")
-    public void delete(@PathParam("id") Long id) {
-        corService.delete(id);
+    public void delete(
+            @PathParam("id") Long id,
+            @QueryParam("replacementColorId") Long replacementColorId) {
+        corService.delete(id, replacementColorId);
     }
 
 }

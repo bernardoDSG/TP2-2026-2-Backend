@@ -1,16 +1,20 @@
 package br.unitins.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import br.unitins.dto.ClienteRequestDTO;
+import br.unitins.dto.EnderecoRequestDTO;
 import br.unitins.model.Cliente;
-import br.unitins.model.Estado;
+import br.unitins.model.Endereco;
 import br.unitins.model.Municipio;
 import br.unitins.repository.ClienteRepository;
-import br.unitins.repository.EstadoRepository;
 import br.unitins.repository.MunicipioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -18,48 +22,75 @@ import jakarta.ws.rs.core.Response;
 public class ClienteServiceImpl implements ClienteService {
 
     @Inject ClienteRepository clienteRepository;
-    @Inject EstadoRepository estadoRepository;
     @Inject MunicipioRepository municipioRepository;
+
+    @Override
+    public List<Cliente> findAll(Integer page, Integer pageSize) {
+        return clienteRepository.findAll().page(page, pageSize).list();
+    }
+
+    @Override
+    public Cliente findById(Long id) {
+        Cliente cliente = clienteRepository.findById(id);
+        if (cliente == null) throw new NotFoundException("Cliente não encontrado.");
+        return cliente;
+    }
 
     @Override
     @Transactional
     public Cliente create(ClienteRequestDTO dto) {
-        if (!isValidCpf(dto.cpf())) {
-            throw new BadRequestException("CPF inválido.");
-        }
-        if (clienteRepository.find("cpf", dto.cpf()).firstResult() != null) {
-            throw new WebApplicationException("CPF já cadastrado.", Response.Status.CONFLICT);
-        }
-
-        Estado estado = estadoRepository.findBySigla(dto.estadoSigla());
-        if (estado == null) {
-            estado = new Estado();
-            estado.setSigla(dto.estadoSigla());
-            estado.setNome(dto.estadoNome().trim());
-            estadoRepository.persist(estado);
-        }
-
-        Municipio municipio = municipioRepository.findByNomeAndEstado(dto.municipio(), estado);
-        if (municipio == null) {
-            municipio = new Municipio();
-            municipio.setNome(dto.municipio().trim());
-            municipio.setEstado(estado);
-            municipioRepository.persist(municipio);
-        }
-
+        validateCpf(dto, null);
         Cliente cliente = new Cliente();
+        applyRequest(cliente, dto);
+        clienteRepository.persist(cliente);
+        return cliente;
+    }
+
+    @Override
+    @Transactional
+    public Cliente update(Long id, ClienteRequestDTO dto) {
+        Cliente cliente = clienteRepository.findById(id);
+        if (cliente == null) throw new NotFoundException("Cliente não encontrado.");
+        validateCpf(dto, id);
+        applyRequest(cliente, dto);
+        return cliente;
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        if (!clienteRepository.deleteById(id)) throw new NotFoundException("Cliente não encontrado.");
+    }
+
+    private void validateCpf(ClienteRequestDTO dto, Long currentId) {
+        if (!isValidCpf(dto.cpf())) throw new BadRequestException("CPF inválido.");
+        Object existing = currentId == null
+                ? clienteRepository.find("cpf", dto.cpf()).firstResult()
+                : clienteRepository.find("cpf = ?1 and id <> ?2", dto.cpf(), currentId).firstResult();
+        if (existing != null) throw new WebApplicationException("CPF já cadastrado.", Response.Status.CONFLICT);
+    }
+
+    private void applyRequest(Cliente cliente, ClienteRequestDTO dto) {
         cliente.setNome(dto.nome().trim());
         cliente.setCpf(dto.cpf());
         cliente.setEmail(dto.email().trim().toLowerCase());
         cliente.setTelefone(dto.telefone());
-        cliente.setCep(dto.cep());
-        cliente.setLogradouro(dto.logradouro().trim());
-        cliente.setNumero(dto.numero().trim());
-        cliente.setComplemento(dto.complemento() == null ? null : dto.complemento().trim());
-        cliente.setBairro(dto.bairro().trim());
-        cliente.setMunicipio(municipio);
-        clienteRepository.persist(cliente);
-        return cliente;
+
+        List<Endereco> enderecos = new ArrayList<>();
+        for (EnderecoRequestDTO enderecoDto : dto.enderecos()) {
+            Municipio municipio = municipioRepository.findById(enderecoDto.municipioId());
+            if (municipio == null) throw new BadRequestException("Município não encontrado.");
+
+            Endereco endereco = new Endereco();
+            endereco.setCep(enderecoDto.cep());
+            endereco.setLogradouro(enderecoDto.logradouro().trim());
+            endereco.setNumero(enderecoDto.numero().trim());
+            endereco.setComplemento(enderecoDto.complemento() == null ? null : enderecoDto.complemento().trim());
+            endereco.setBairro(enderecoDto.bairro().trim());
+            endereco.setMunicipio(municipio);
+            enderecos.add(endereco);
+        }
+        cliente.setEnderecos(enderecos);
     }
 
     private boolean isValidCpf(String cpf) {
