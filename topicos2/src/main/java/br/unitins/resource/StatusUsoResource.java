@@ -2,6 +2,7 @@ package br.unitins.resource;
 
 import java.util.List;
 
+import br.unitins.dto.StatusUsoResponseDTO;
 import br.unitins.model.StatusUso;
 import br.unitins.service.StatusUsoService;
 import jakarta.inject.Inject;
@@ -19,13 +20,14 @@ public class StatusUsoResource {
     StatusUsoService statusUsoService;
 
     @GET
-    public List<StatusUso> buscarTodos() {
-        return statusUsoService.findAll();
+    public List<StatusUsoResponseDTO> buscarTodos() {
+        return statusUsoService.findAll().stream().map(StatusUsoResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/{id}")
-    public StatusUso buscarPorId(@PathParam("id") Long id) {
-        return statusUsoService.findById(id);
+    public StatusUsoResponseDTO buscarPorId(@PathParam("id") Long id) {
+        StatusUso statusUso = statusUsoService.findById(id);
+        return statusUso == null ? null : StatusUsoResponseDTO.valueOf(statusUso);
     }
 }

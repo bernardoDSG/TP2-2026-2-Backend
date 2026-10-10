@@ -2,8 +2,8 @@ package br.unitins.resource;
 
 import java.util.List;
 
+import br.unitins.dto.EstadoResponseDTO;
 import br.unitins.dto.EstadoRequestDTO;
-import br.unitins.model.Estado;
 import br.unitins.service.EstadoService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -25,18 +25,26 @@ public class EstadoResource {
     @Inject EstadoService estadoService;
 
     @GET
-    public List<Estado> findAll() { return estadoService.findAll(); }
+    public List<EstadoResponseDTO> findAll() {
+        return estadoService.findAll().stream().map(EstadoResponseDTO::valueOf).toList();
+    }
 
     @GET
     @Path("/{id}")
-    public Estado findById(@PathParam("id") Long id) { return estadoService.findById(id); }
+    public EstadoResponseDTO findById(@PathParam("id") Long id) {
+        return EstadoResponseDTO.valueOf(estadoService.findById(id));
+    }
 
     @POST
-    public Estado create(@Valid EstadoRequestDTO dto) { return estadoService.create(dto); }
+    public EstadoResponseDTO create(@Valid EstadoRequestDTO dto) {
+        return EstadoResponseDTO.valueOf(estadoService.create(dto));
+    }
 
     @PUT
     @Path("/{id}")
-    public Estado update(@PathParam("id") Long id, @Valid EstadoRequestDTO dto) { return estadoService.update(id, dto); }
+    public EstadoResponseDTO update(@PathParam("id") Long id, @Valid EstadoRequestDTO dto) {
+        return EstadoResponseDTO.valueOf(estadoService.update(id, dto));
+    }
 
     @DELETE
     @Path("/{id}")

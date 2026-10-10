@@ -4,9 +4,11 @@ import java.util.List;
 
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.model.Carro;
+import br.unitins.model.Categoria;
 import br.unitins.model.Marca;
 import br.unitins.model.StatusUso;
 import br.unitins.repository.CarroRepository;
+import br.unitins.repository.CategoriaRepository;
 import br.unitins.repository.CorRepository;
 import br.unitins.repository.MarcaRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -25,6 +27,9 @@ public class CarroServiceImpl implements CarroService {
 
     @Inject
     MarcaRepository marcaRepository;
+
+    @Inject
+    CategoriaRepository categoriaRepository;
 
     @Override
     public List<Carro> findAll(Integer page, Integer pageSize) {
@@ -55,6 +60,11 @@ public class CarroServiceImpl implements CarroService {
     }
 
     @Override
+    public List<Carro> findByCategoria(Long categoriaId, Integer page, Integer pageSize) {
+        return carroRepository.findByCategoria(categoriaId).page(page, pageSize).list();
+    }
+
+    @Override
     @Transactional
     public Carro create(CarroRequestDTO dto) {
         Carro carro = new Carro();
@@ -62,6 +72,7 @@ public class CarroServiceImpl implements CarroService {
         carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
         carro.setCor(corRepository.findById(dto.corId()));
         carro.setMarca(findMarca(dto.marcaId()));
+        carro.setCategoria(findCategoria(dto.categoriaId()));
         carroRepository.persist(carro);
         return carro;
     }
@@ -81,6 +92,7 @@ public class CarroServiceImpl implements CarroService {
         carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
         carro.setCor(corRepository.findById(dto.corId()));
         carro.setMarca(findMarca(dto.marcaId()));
+        carro.setCategoria(findCategoria(dto.categoriaId()));
 
     }
 
@@ -90,6 +102,14 @@ public class CarroServiceImpl implements CarroService {
             throw new jakarta.ws.rs.BadRequestException("Marca não encontrada.");
         }
         return marca;
+    }
+
+    private Categoria findCategoria(Long categoriaId) {
+        Categoria categoria = categoriaRepository.findById(categoriaId);
+        if (categoria == null) {
+            throw new jakarta.ws.rs.BadRequestException("Categoria não encontrada.");
+        }
+        return categoria;
     }
 
     @Override

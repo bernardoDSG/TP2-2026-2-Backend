@@ -52,10 +52,19 @@ class MarcaResourceTest {
             .statusCode(200)
             .extract().path("id");
 
+        Number categoriaId = given()
+            .contentType(ContentType.JSON)
+            .body(Map.of("nome", "Categoria para teste de marca"))
+            .when().post("/categorias")
+            .then()
+            .statusCode(200)
+            .extract().path("id");
+
         Number carroId = given()
             .contentType(ContentType.JSON)
             .body(Map.of("nome", "Carro da marca de teste", "StatusUsoId", 1,
-                    "corId", corId.longValue(), "marcaId", marcaId.longValue()))
+                    "corId", corId.longValue(), "marcaId", marcaId.longValue(),
+                    "categoriaId", categoriaId.longValue()))
             .when().post("/carros")
             .then()
             .statusCode(200)
@@ -65,7 +74,7 @@ class MarcaResourceTest {
             .when().get("/carros/marca/" + marcaId)
             .then()
             .statusCode(200)
-            .body("[0].marca.nome", is("Marca temporaria atualizada"));
+            .body("[0].nome", is("Marca temporaria atualizada Carro da marca de teste"));
 
         given()
             .when().delete("/marcas/" + marcaId)
@@ -82,10 +91,11 @@ class MarcaResourceTest {
             .when().get("/carros/" + carroId)
             .then()
             .statusCode(200)
-            .body("marca.nome", is("Marca substituta"));
+            .body("nome", is("Marca substituta Carro da marca de teste"));
 
         given().when().delete("/carros/" + carroId).then().statusCode(204);
         given().when().delete("/cores/" + corId).then().statusCode(204);
         given().when().delete("/marcas/" + replacementMarcaId).then().statusCode(204);
+        given().when().delete("/categorias/" + categoriaId).then().statusCode(204);
     }
 }

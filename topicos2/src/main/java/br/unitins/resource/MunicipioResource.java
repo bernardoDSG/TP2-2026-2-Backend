@@ -3,7 +3,7 @@ package br.unitins.resource;
 import java.util.List;
 
 import br.unitins.dto.MunicipioRequestDTO;
-import br.unitins.model.Municipio;
+import br.unitins.dto.MunicipioResponseDTO;
 import br.unitins.service.MunicipioService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -25,18 +25,26 @@ public class MunicipioResource {
     @Inject MunicipioService municipioService;
 
     @GET
-    public List<Municipio> findAll() { return municipioService.findAll(); }
+    public List<MunicipioResponseDTO> findAll() {
+        return municipioService.findAll().stream().map(MunicipioResponseDTO::valueOf).toList();
+    }
 
     @GET
     @Path("/{id}")
-    public Municipio findById(@PathParam("id") Long id) { return municipioService.findById(id); }
+    public MunicipioResponseDTO findById(@PathParam("id") Long id) {
+        return MunicipioResponseDTO.valueOf(municipioService.findById(id));
+    }
 
     @POST
-    public Municipio create(@Valid MunicipioRequestDTO dto) { return municipioService.create(dto); }
+    public MunicipioResponseDTO create(@Valid MunicipioRequestDTO dto) {
+        return MunicipioResponseDTO.valueOf(municipioService.create(dto));
+    }
 
     @PUT
     @Path("/{id}")
-    public Municipio update(@PathParam("id") Long id, @Valid MunicipioRequestDTO dto) { return municipioService.update(id, dto); }
+    public MunicipioResponseDTO update(@PathParam("id") Long id, @Valid MunicipioRequestDTO dto) {
+        return MunicipioResponseDTO.valueOf(municipioService.update(id, dto));
+    }
 
     @DELETE
     @Path("/{id}")

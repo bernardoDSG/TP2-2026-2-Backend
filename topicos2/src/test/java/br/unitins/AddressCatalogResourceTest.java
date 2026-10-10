@@ -29,14 +29,14 @@ class AddressCatalogResourceTest {
             .when().post("/municipios")
             .then()
             .statusCode(200)
-            .body("estado.sigla", is("ZZ"))
+            .body("estadoSigla", is("ZZ"))
             .extract().path("id");
 
         given()
             .when().get("/municipios/" + municipioId)
             .then()
             .statusCode(200)
-            .body("estado.nome", is("Estado de teste"));
+            .body("estadoNome", is("Estado de teste"));
 
         given()
             .when().delete("/estados/" + estadoId)

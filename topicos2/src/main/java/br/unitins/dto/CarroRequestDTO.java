@@ -4,7 +4,8 @@ public record CarroRequestDTO(
     String nome,
     Long StatusUsoId,
     Long corId,
-    Long marcaId
+    Long marcaId,
+    Long categoriaId
 ) {
     
 }

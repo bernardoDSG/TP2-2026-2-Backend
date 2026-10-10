@@ -3,7 +3,7 @@ package br.unitins.resource;
 import java.util.List;
 
 import br.unitins.dto.ClienteRequestDTO;
-import br.unitins.model.Cliente;
+import br.unitins.dto.ClienteResponseDTO;
 import br.unitins.service.ClienteService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -28,27 +28,27 @@ public class ClienteResource {
     ClienteService clienteService;
 
     @GET
-    public List<Cliente> findAll(
+    public List<ClienteResponseDTO> findAll(
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("100") Integer pageSize) {
-        return clienteService.findAll(page, pageSize);
+        return clienteService.findAll(page, pageSize).stream().map(ClienteResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/{id}")
-    public Cliente findById(@PathParam("id") Long id) {
-        return clienteService.findById(id);
+    public ClienteResponseDTO findById(@PathParam("id") Long id) {
+        return ClienteResponseDTO.valueOf(clienteService.findById(id));
     }
 
     @POST
-    public Cliente create(@Valid ClienteRequestDTO dto) {
-        return clienteService.create(dto);
+    public ClienteResponseDTO create(@Valid ClienteRequestDTO dto) {
+        return ClienteResponseDTO.valueOf(clienteService.create(dto));
     }
 
     @PUT
     @Path("/{id}")
-    public Cliente update(@PathParam("id") Long id, @Valid ClienteRequestDTO dto) {
-        return clienteService.update(id, dto);
+    public ClienteResponseDTO update(@PathParam("id") Long id, @Valid ClienteRequestDTO dto) {
+        return ClienteResponseDTO.valueOf(clienteService.update(id, dto));
     }
 
     @DELETE

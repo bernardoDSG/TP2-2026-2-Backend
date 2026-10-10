@@ -25,6 +25,10 @@ public class CarroRepository implements PanacheRepository<Carro> {
         return find("SELECT c FROM Carro c WHERE c.marca.id = ?1 ORDER BY c.nome", marcaId);
     }
 
+    public PanacheQuery<Carro> findByCategoria(Long categoriaId) {
+        return find("SELECT c FROM Carro c WHERE c.categoria.id = ?1 ORDER BY c.nome", categoriaId);
+    }
+
     @Override
     public PanacheQuery<Carro> findAll() {
         

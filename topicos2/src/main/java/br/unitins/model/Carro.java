@@ -18,6 +18,10 @@ public class Carro extends DefaultEntity{
     @JoinColumn(name = "marca_id", nullable = false)
     private Marca marca;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private Categoria categoria;
+
     public String getNome() {
         return nome;
     }
@@ -48,5 +52,13 @@ public class Carro extends DefaultEntity{
 
     public void setMarca(Marca marca) {
         this.marca = marca;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
 }

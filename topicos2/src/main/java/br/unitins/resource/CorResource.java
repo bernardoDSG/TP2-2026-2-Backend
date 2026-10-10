@@ -3,6 +3,7 @@ package br.unitins.resource;
 import java.util.List;
 
 import br.unitins.dto.CorRequestDTO;
+import br.unitins.dto.CorResponseDTO;
 import br.unitins.model.Cor;
 import br.unitins.model.Tonalidade;
 import br.unitins.service.CorService;
@@ -28,33 +29,34 @@ public class CorResource {
     CorService corService;
 
     @GET
-    public List<Cor> buscarTodas(@QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return corService.findAll(page, pageSize);
+    public List<CorResponseDTO> buscarTodas(@QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return corService.findAll(page, pageSize).stream().map(CorResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/nome/{nome}")
-    public List<Cor> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return corService.findByNome(nome, page, pageSize);
+    public List<CorResponseDTO> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return corService.findByNome(nome, page, pageSize).stream().map(CorResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/tonalidade/{tonalidadeId}")
-    public List<Cor> buscarPorTonalidade(@PathParam("tonalidadeId") Long tonalidadeId,
+    public List<CorResponseDTO> buscarPorTonalidade(@PathParam("tonalidadeId") Long tonalidadeId,
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return corService.findByTonalidade(Tonalidade.valueOf(tonalidadeId), page, pageSize);
+        return corService.findByTonalidade(Tonalidade.valueOf(tonalidadeId), page, pageSize).stream().map(CorResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/{id}")
-    public Cor buscarPorId(@PathParam("id") Long id) {
-        return corService.findById(id);
+    public CorResponseDTO buscarPorId(@PathParam("id") Long id) {
+        Cor cor = corService.findById(id);
+        return cor == null ? null : CorResponseDTO.valueOf(cor);
     }
 
     @POST
-    public Cor create(CorRequestDTO cor) {
-        return corService.create(cor);
+    public CorResponseDTO create(CorRequestDTO cor) {
+        return CorResponseDTO.valueOf(corService.create(cor));
     }
 
     @PUT

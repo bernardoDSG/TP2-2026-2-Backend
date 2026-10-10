@@ -46,7 +46,7 @@ class ClienteResourceTest {
 
         List<Map<String, Object>> municipios = given().when().get("/municipios").then().statusCode(200).extract().jsonPath().getList("");
         municipioId = municipios.stream()
-            .filter(municipio -> "Palmas".equals(municipio.get("nome")) && ((Map<?, ?>) municipio.get("estado")).get("id").toString().equals(estadoId.toString()))
+            .filter(municipio -> "Palmas".equals(municipio.get("nome")) && municipio.get("estadoId").toString().equals(estadoId.toString()))
             .map(municipio -> (Number) municipio.get("id"))
             .findFirst()
             .orElseGet(() -> given()
@@ -70,8 +70,8 @@ class ClienteResourceTest {
             .then()
             .statusCode(200)
             .body("nome", is("Maria da Silva"))
-            .body("enderecos[0].municipio.nome", is("Palmas"))
-            .body("enderecos[0].municipio.estado.sigla", is("TO"))
+            .body("enderecos[0].municipioNome", is("Palmas"))
+            .body("enderecos[0].estadoSigla", is("TO"))
             .body("enderecos.size()", is(2))
             .extract().path("id");
 

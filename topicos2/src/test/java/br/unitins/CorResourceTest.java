@@ -31,6 +31,14 @@ class CorResourceTest {
             .statusCode(200)
             .extract().path("id");
 
+        Number categoriaId = given()
+            .contentType(ContentType.JSON)
+            .body(Map.of("nome", "Categoria para teste de cor"))
+            .when().post("/categorias")
+            .then()
+            .statusCode(200)
+            .extract().path("id");
+
         Number replacementColorId = given()
             .contentType(ContentType.JSON)
             .body(Map.of("nome", "Cor substituta de teste", "tonalidadeId", 2))
@@ -42,7 +50,8 @@ class CorResourceTest {
         Number carId = given()
             .contentType(ContentType.JSON)
             .body(Map.of("nome", "Carro temporario para exclusao", "StatusUsoId", 1,
-                    "corId", colorId.longValue(), "marcaId", carBrandId.longValue()))
+                    "corId", colorId.longValue(), "marcaId", carBrandId.longValue(),
+                    "categoriaId", categoriaId.longValue()))
             .when().post("/carros")
             .then()
             .statusCode(200)
@@ -63,7 +72,7 @@ class CorResourceTest {
             .when().get("/carros/" + carId)
             .then()
             .statusCode(200)
-            .body("cor.nome", is("Cor substituta de teste"));
+            .body("nome", is("Marca para teste de cor Carro temporario para exclusao"));
 
         given()
             .when().delete("/carros/" + carId)
@@ -77,6 +86,11 @@ class CorResourceTest {
 
         given()
             .when().delete("/marcas/" + carBrandId)
+            .then()
+            .statusCode(204);
+
+        given()
+            .when().delete("/categorias/" + categoriaId)
             .then()
             .statusCode(204);
     }

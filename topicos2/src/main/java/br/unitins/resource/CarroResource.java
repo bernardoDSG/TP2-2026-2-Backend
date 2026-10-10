@@ -3,6 +3,7 @@ package br.unitins.resource;
 import java.util.List;
 
 import br.unitins.dto.CarroRequestDTO;
+import br.unitins.dto.CarroResponseDTO;
 import br.unitins.model.Carro;
 import br.unitins.model.StatusUso;
 import br.unitins.service.CarroService;
@@ -29,50 +30,59 @@ public class CarroResource {
     CarroService carroService;
 
     @GET
-    public List<Carro> buscarTodos(
+    public List<CarroResponseDTO> buscarTodos(
         @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return carroService.findAll(page, pageSize);
+        return carroService.findAll(page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/nome/{nome}")
-    public List<Carro> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return carroService.findByNome(nome, page, pageSize);
+    public List<CarroResponseDTO> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return carroService.findByNome(nome, page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/status-uso/{statusUsoId}")
-    public List<Carro> buscarPorStatusUso(@PathParam("statusUsoId") Long statusUsoId,
+    public List<CarroResponseDTO> buscarPorStatusUso(@PathParam("statusUsoId") Long statusUsoId,
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return carroService.findByStatusUso(StatusUso.valueOf(statusUsoId), page, pageSize);
+        return carroService.findByStatusUso(StatusUso.valueOf(statusUsoId), page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/cor/{corId}")
-    public List<Carro> buscarPorCor(@PathParam("corId") Long corId,
+    public List<CarroResponseDTO> buscarPorCor(@PathParam("corId") Long corId,
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return carroService.findByCor(corId, page, pageSize);
+        return carroService.findByCor(corId, page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/marca/{marcaId}")
-    public List<Carro> buscarPorMarca(@PathParam("marcaId") Long marcaId,
+    public List<CarroResponseDTO> buscarPorMarca(@PathParam("marcaId") Long marcaId,
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return carroService.findByMarca(marcaId, page, pageSize);
+        return carroService.findByMarca(marcaId, page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
+    }
+
+    @GET
+    @Path("/categoria/{categoriaId}")
+    public List<CarroResponseDTO> buscarPorCategoria(@PathParam("categoriaId") Long categoriaId,
+            @QueryParam("page") @DefaultValue("0") Integer page,
+            @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return carroService.findByCategoria(categoriaId, page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/{id}")
-    public Carro buscarPorId(@PathParam("id") Long id) {
-        return carroService.findById(id);
+    public CarroResponseDTO buscarPorId(@PathParam("id") Long id) {
+        Carro carro = carroService.findById(id);
+        return carro == null ? null : CarroResponseDTO.valueOf(carro);
     }
 
     @POST
-    public Carro create(CarroRequestDTO dto) {
-        return carroService.create(dto);
+    public CarroResponseDTO create(CarroRequestDTO dto) {
+        return CarroResponseDTO.valueOf(carroService.create(dto));
     }
 
     @PUT

@@ -3,7 +3,7 @@ package br.unitins.resource;
 import java.util.List;
 
 import br.unitins.dto.MarcaRequestDTO;
-import br.unitins.model.Marca;
+import br.unitins.dto.MarcaResponseDTO;
 import br.unitins.service.MarcaService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -27,30 +27,31 @@ public class MarcaResource {
     MarcaService marcaService;
 
     @GET
-    public List<Marca> buscarTodas(
+    public List<MarcaResponseDTO> buscarTodas(
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return marcaService.findAll(page, pageSize);
+        return marcaService.findAll(page, pageSize).stream().map(MarcaResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/nome/{nome}")
-    public List<Marca> buscarPorNome(
+    public List<MarcaResponseDTO> buscarPorNome(
             @PathParam("nome") String nome,
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
-        return marcaService.findByNome(nome, page, pageSize);
+        return marcaService.findByNome(nome, page, pageSize).stream().map(MarcaResponseDTO::valueOf).toList();
     }
 
     @GET
     @Path("/{id}")
-    public Marca buscarPorId(@PathParam("id") Long id) {
-        return marcaService.findById(id);
+    public MarcaResponseDTO buscarPorId(@PathParam("id") Long id) {
+        var marca = marcaService.findById(id);
+        return marca == null ? null : MarcaResponseDTO.valueOf(marca);
     }
 
     @POST
-    public Marca create(MarcaRequestDTO dto) {
-        return marcaService.create(dto);
+    public MarcaResponseDTO create(MarcaRequestDTO dto) {
+        return MarcaResponseDTO.valueOf(marcaService.create(dto));
     }
 
     @PUT
