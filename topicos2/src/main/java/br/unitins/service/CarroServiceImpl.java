@@ -4,9 +4,11 @@ import java.util.List;
 
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.model.Carro;
+import br.unitins.model.Marca;
 import br.unitins.model.StatusUso;
 import br.unitins.repository.CarroRepository;
 import br.unitins.repository.CorRepository;
+import br.unitins.repository.MarcaRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -20,6 +22,9 @@ public class CarroServiceImpl implements CarroService {
 
     @Inject
     CorRepository corRepository;
+
+    @Inject
+    MarcaRepository marcaRepository;
 
     @Override
     public List<Carro> findAll(Integer page, Integer pageSize) {
@@ -45,12 +50,18 @@ public class CarroServiceImpl implements CarroService {
     }
 
     @Override
+    public List<Carro> findByMarca(Long marcaId, Integer page, Integer pageSize) {
+        return carroRepository.findByMarca(marcaId).page(page, pageSize).list();
+    }
+
+    @Override
     @Transactional
     public Carro create(CarroRequestDTO dto) {
         Carro carro = new Carro();
         carro.setNome(dto.nome());
         carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
         carro.setCor(corRepository.findById(dto.corId()));
+        carro.setMarca(findMarca(dto.marcaId()));
         carroRepository.persist(carro);
         return carro;
     }
@@ -69,7 +80,16 @@ public class CarroServiceImpl implements CarroService {
         carro.setNome(dto.nome());
         carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
         carro.setCor(corRepository.findById(dto.corId()));
+        carro.setMarca(findMarca(dto.marcaId()));
 
+    }
+
+    private Marca findMarca(Long marcaId) {
+        Marca marca = marcaRepository.findById(marcaId);
+        if (marca == null) {
+            throw new jakarta.ws.rs.BadRequestException("Marca não encontrada.");
+        }
+        return marca;
     }
 
     @Override

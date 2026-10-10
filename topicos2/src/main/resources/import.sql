@@ -21,26 +21,37 @@ insert into cor (nome, tonalidade) values ('Cinza', 1);
 insert into cor (nome, tonalidade) values ('Vermelho', 2);
 insert into cor (nome, tonalidade) values ('Azul', 1);
 
-insert into carro (nome, statususo, cor_id)
-values ('Toyota Corolla', 1, (select id from cor where nome = 'Prata'));
-insert into carro (nome, statususo, cor_id)
-values ('Honda Civic', 2, (select id from cor where nome = 'Preto'));
-insert into carro (nome, statususo, cor_id)
-values ('Volkswagen Gol', 2, (select id from cor where nome = 'Branco'));
-insert into carro (nome, statususo, cor_id)
-values ('Chevrolet Onix', 1, (select id from cor where nome = 'Vermelho'));
-insert into carro (nome, statususo, cor_id)
-values ('Hyundai HB20', 2, (select id from cor where nome = 'Cinza'));
-insert into carro (nome, statususo, cor_id)
-values ('Fiat Argo', 1, (select id from cor where nome = 'Azul'));
-insert into carro (nome, statususo, cor_id)
-values ('Jeep Renegade', 2, (select id from cor where nome = 'Preto'));
-insert into carro (nome, statususo, cor_id)
-values ('Ford Ka', 2, (select id from cor where nome = 'Branco'));
-insert into carro (nome, statususo, cor_id)
-values ('Nissan Kicks', 1, (select id from cor where nome = 'Prata'));
-insert into carro (nome, statususo, cor_id)
-values ('Renault Kwid', 2, (select id from cor where nome = 'Vermelho'));
+insert into marca (nome) values ('Toyota');
+insert into marca (nome) values ('Honda');
+insert into marca (nome) values ('Volkswagen');
+insert into marca (nome) values ('Chevrolet');
+insert into marca (nome) values ('Hyundai');
+insert into marca (nome) values ('Fiat');
+insert into marca (nome) values ('Jeep');
+insert into marca (nome) values ('Ford');
+insert into marca (nome) values ('Nissan');
+insert into marca (nome) values ('Renault');
+
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Corolla', 1, (select id from cor where nome = 'Prata'), (select id from marca where nome = 'Toyota'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Civic', 2, (select id from cor where nome = 'Preto'), (select id from marca where nome = 'Honda'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Gol', 2, (select id from cor where nome = 'Branco'), (select id from marca where nome = 'Volkswagen'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Onix', 1, (select id from cor where nome = 'Vermelho'), (select id from marca where nome = 'Chevrolet'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('HB20', 2, (select id from cor where nome = 'Cinza'), (select id from marca where nome = 'Hyundai'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Argo', 1, (select id from cor where nome = 'Azul'), (select id from marca where nome = 'Fiat'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Renegade', 2, (select id from cor where nome = 'Preto'), (select id from marca where nome = 'Jeep'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Ka', 2, (select id from cor where nome = 'Branco'), (select id from marca where nome = 'Ford'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Kicks', 1, (select id from cor where nome = 'Prata'), (select id from marca where nome = 'Nissan'));
+insert into carro (nome, statususo, cor_id, marca_id)
+values ('Kwid', 2, (select id from cor where nome = 'Vermelho'), (select id from marca where nome = 'Renault'));
 
 insert into cliente (nome, cpf, email, telefone)
 values ('Ana Paula Ribeiro', '11144477735', 'ana.ribeiro@example.com', '63992345678');

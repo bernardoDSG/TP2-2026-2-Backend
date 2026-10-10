@@ -15,6 +15,14 @@ class CorResourceTest {
 
     @Test
     void deletesColorAfterReassigningLinkedCars() {
+        Number carBrandId = given()
+            .contentType(ContentType.JSON)
+            .body(Map.of("nome", "Marca para teste de cor"))
+            .when().post("/marcas")
+            .then()
+            .statusCode(200)
+            .extract().path("id");
+
         Number colorId = given()
             .contentType(ContentType.JSON)
             .body(Map.of("nome", "Cor temporaria para exclusao", "tonalidadeId", 1))
@@ -33,7 +41,8 @@ class CorResourceTest {
 
         Number carId = given()
             .contentType(ContentType.JSON)
-            .body(Map.of("nome", "Carro temporario para exclusao", "StatusUsoId", 1, "corId", colorId.longValue()))
+            .body(Map.of("nome", "Carro temporario para exclusao", "StatusUsoId", 1,
+                    "corId", colorId.longValue(), "marcaId", carBrandId.longValue()))
             .when().post("/carros")
             .then()
             .statusCode(200)
@@ -63,6 +72,11 @@ class CorResourceTest {
 
         given()
             .when().delete("/cores/" + replacementColorId)
+            .then()
+            .statusCode(204);
+
+        given()
+            .when().delete("/marcas/" + carBrandId)
             .then()
             .statusCode(204);
     }

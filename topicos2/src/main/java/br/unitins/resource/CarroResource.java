@@ -57,6 +57,14 @@ public class CarroResource {
     }
 
     @GET
+    @Path("/marca/{marcaId}")
+    public List<Carro> buscarPorMarca(@PathParam("marcaId") Long marcaId,
+            @QueryParam("page") @DefaultValue("0") Integer page,
+            @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
+        return carroService.findByMarca(marcaId, page, pageSize);
+    }
+
+    @GET
     @Path("/{id}")
     public Carro buscarPorId(@PathParam("id") Long id) {
         return carroService.findById(id);

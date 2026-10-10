@@ -14,6 +14,10 @@ public class Carro extends DefaultEntity{
     @JoinColumn(name = "cor_id", nullable = false)
     private Cor cor;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "marca_id", nullable = false)
+    private Marca marca;
+
     public String getNome() {
         return nome;
     }
@@ -38,6 +42,11 @@ public class Carro extends DefaultEntity{
         this.cor = cor;
     }
 
-    
-    
+    public Marca getMarca() {
+        return marca;
+    }
+
+    public void setMarca(Marca marca) {
+        this.marca = marca;
+    }
 }

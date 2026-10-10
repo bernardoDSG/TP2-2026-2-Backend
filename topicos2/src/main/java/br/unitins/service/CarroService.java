@@ -12,6 +12,7 @@ public interface CarroService {
     List<Carro> findByNome(String nome, Integer page, Integer pageSize);
     List<Carro> findByStatusUso(StatusUso statusUso, Integer page, Integer pageSize);
     List<Carro> findByCor(Long corId, Integer page, Integer pageSize);
+    List<Carro> findByMarca(Long marcaId, Integer page, Integer pageSize);
     Carro findById(Long id);
     Carro create(CarroRequestDTO dto);
     void update(Long id, CarroRequestDTO dto);
