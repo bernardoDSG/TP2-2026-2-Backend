@@ -1,0 +1,64 @@
+@startuml CRUDs_Administrativos_Backend
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class Carro {
+    Long id
+    String nome
+    StatusUso statusUso
+}
+
+class Marca {
+    Long id
+    String nome
+}
+
+class Categoria {
+    Long id
+    String nome
+}
+
+class Cor {
+    Long id
+    String nome
+    Tonalidade tonalidade
+}
+
+class Cliente {
+    Long id
+    String nome
+    String cpf
+    String email
+    String telefone
+}
+
+class Endereco {
+    Long id
+    String cep
+    String logradouro
+    String numero
+    String complemento
+    String bairro
+}
+
+class Municipio {
+    Long id
+    String nome
+}
+
+class Estado {
+    Long id
+    String nome
+    String sigla
+}
+
+Carro "0..*" --> "1" Marca : marca
+Carro "0..*" --> "1" Categoria : categoria
+Carro "0..*" --> "1" Cor : cor
+
+Cliente "1" --> "0..*" Endereco : enderecos
+Endereco "0..*" --> "1" Municipio : municipio
+Municipio "0..*" --> "1" Estado : estado
+
+@enduml
