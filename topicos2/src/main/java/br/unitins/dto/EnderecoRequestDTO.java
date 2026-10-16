@@ -11,5 +11,6 @@ public record EnderecoRequestDTO(
     @NotBlank @Size(max = 20) String numero,
     @Size(max = 100) String complemento,
     @NotBlank @Size(max = 100) String bairro,
-    @NotNull Long municipioId
+    @NotNull Long municipioId,
+    Long clienteId
 ) {}

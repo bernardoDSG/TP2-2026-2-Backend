@@ -57,6 +57,77 @@ values ('Kicks', 1, (select id from cor where nome = 'Prata'), (select id from m
 insert into carro (nome, statususo, cor_id, marca_id, categoria_id)
 values ('Kwid', 2, (select id from cor where nome = 'Vermelho'), (select id from marca where nome = 'Renault'), (select id from categoria where nome = 'Hatch'));
 
+insert into setor (nome, linhas, colunas) values ('Setor A', 3, 4);
+insert into setor (nome, linhas, colunas) values ('Setor B', 3, 4);
+insert into setor (nome, linhas, colunas) values ('Setor C', 2, 4);
+
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-01', 1, 1, 'NORMAL', (select id from setor where nome = 'Setor A'), (select id from carro where nome = 'Corolla'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-02', 1, 2, 'COBERTA', (select id from setor where nome = 'Setor A'), (select id from carro where nome = 'Civic'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-03', 1, 3, 'NORMAL', (select id from setor where nome = 'Setor A'), (select id from carro where nome = 'Gol'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-04', 1, 4, 'PREFERENCIAL', (select id from setor where nome = 'Setor A'), (select id from carro where nome = 'Onix'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-05', 2, 1, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-06', 2, 2, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-07', 2, 3, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-08', 2, 4, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-09', 3, 1, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-10', 3, 2, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-11', 3, 3, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('A-12', 3, 4, 'NORMAL', (select id from setor where nome = 'Setor A'), null);
+
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-01', 1, 1, 'NORMAL', (select id from setor where nome = 'Setor B'), (select id from carro where nome = 'HB20'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-02', 1, 2, 'COBERTA', (select id from setor where nome = 'Setor B'), (select id from carro where nome = 'Argo'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-03', 1, 3, 'NORMAL', (select id from setor where nome = 'Setor B'), (select id from carro where nome = 'Renegade'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-04', 1, 4, 'PREFERENCIAL', (select id from setor where nome = 'Setor B'), (select id from carro where nome = 'Ka'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-05', 2, 1, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-06', 2, 2, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-07', 2, 3, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-08', 2, 4, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-09', 3, 1, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-10', 3, 2, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-11', 3, 3, 'NORMAL', (select id from setor where nome = 'Setor B'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('B-12', 3, 4, 'NORMAL', (select id from setor where nome = 'Setor B'), (select id from carro where nome = 'Kicks'));
+
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-01', 1, 1, 'COBERTA', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-02', 1, 2, 'NORMAL', (select id from setor where nome = 'Setor C'), (select id from carro where nome = 'Kwid'));
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-03', 1, 3, 'NORMAL', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-04', 1, 4, 'PREFERENCIAL', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-05', 2, 1, 'NORMAL', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-06', 2, 2, 'NORMAL', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-07', 2, 3, 'NORMAL', (select id from setor where nome = 'Setor C'), null);
+insert into vaga (codigo_vaga, linha, coluna, tipo, setor_id, carro_id)
+values ('C-08', 2, 4, 'NORMAL', (select id from setor where nome = 'Setor C'), null);
+
 insert into cliente (nome, cpf, email, telefone)
 values ('Ana Paula Ribeiro', '11144477735', 'ana.ribeiro@example.com', '63992345678');
 insert into cliente (nome, cpf, email, telefone)

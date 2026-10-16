@@ -11,6 +11,7 @@ import br.unitins.repository.CarroRepository;
 import br.unitins.repository.CategoriaRepository;
 import br.unitins.repository.CorRepository;
 import br.unitins.repository.MarcaRepository;
+import br.unitins.repository.VagaRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -30,6 +31,9 @@ public class CarroServiceImpl implements CarroService {
 
     @Inject
     CategoriaRepository categoriaRepository;
+
+    @Inject
+    VagaRepository vagaRepository;
 
     @Override
     public List<Carro> findAll(Integer page, Integer pageSize) {
@@ -115,6 +119,11 @@ public class CarroServiceImpl implements CarroService {
     @Override
     @Transactional
     public void delete(Long id) {
+        if (vagaRepository.count("carro.id", id) > 0) {
+            throw new jakarta.ws.rs.WebApplicationException(
+                    "Remova o carro da vaga antes de excluí-lo.",
+                    jakarta.ws.rs.core.Response.Status.CONFLICT);
+        }
         carroRepository.deleteById(id);
 
     }
