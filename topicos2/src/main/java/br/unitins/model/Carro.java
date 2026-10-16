@@ -1,6 +1,7 @@
 package br.unitins.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
@@ -9,6 +10,9 @@ public class Carro extends DefaultEntity{
     private String nome;
 
     private StatusUso statusUso;
+
+    @Column(name = "possui_imagem", nullable = false, columnDefinition = "boolean default false")
+    private boolean possuiImagem;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "cor_id", nullable = false)
@@ -36,6 +40,14 @@ public class Carro extends DefaultEntity{
 
     public void setStatusUso(StatusUso statusUso) {
         this.statusUso = statusUso;
+    }
+
+    public boolean isPossuiImagem() {
+        return possuiImagem;
+    }
+
+    public void setPossuiImagem(boolean possuiImagem) {
+        this.possuiImagem = possuiImagem;
     }
 
     public Cor getCor() {

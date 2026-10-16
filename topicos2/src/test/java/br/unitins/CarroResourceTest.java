@@ -2,8 +2,10 @@ package br.unitins;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 
 import java.util.Map;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +14,24 @@ import io.restassured.http.ContentType;
 
 @QuarkusTest
 class CarroResourceTest {
+
+    @Test
+    void importedCarsHaveBundledPhotos() {
+        for (String model : List.of("Corolla", "Civic", "Gol", "Onix", "HB20", "Argo", "Renegade", "Ka", "Kicks", "Kwid")) {
+            Number carId = given()
+                .when().get("/carros/nome/" + model)
+                .then()
+                .statusCode(200)
+                .body("[0].imagemUrl", is(notNullValue()))
+                .extract().path("[0].id");
+
+            given()
+                .when().get("/carros/" + carId + "/imagem")
+                .then()
+                .statusCode(200)
+                .contentType("image/png");
+        }
+    }
 
     @Test
     void returnsCarFieldsAndRelationshipIdsForEditing() {
@@ -57,6 +77,15 @@ class CarroResourceTest {
             .body("statusUsoId", is(1))
             .extract().path("id");
 
+        byte[] pngHeader = new byte[] {
+            (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+        };
+        given()
+            .multiPart("imagem", "carro.png", pngHeader, "image/png")
+            .when().post("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(204);
+
         given()
             .when().get("/carros/" + carId)
             .then()
@@ -71,7 +100,8 @@ class CarroResourceTest {
             .body("categoriaNome", is("Categoria para teste de resposta"))
             .body("corId", is(corId.intValue()))
             .body("corNome", is("Cor para teste de resposta"))
-            .body("tonalidade", is("Escuro"));
+            .body("tonalidade", is("Escuro"))
+            .body("imagemUrl", is("/carros/" + carId + "/imagem"));
 
         given()
             .contentType(ContentType.JSON)
@@ -95,6 +125,18 @@ class CarroResourceTest {
             .body("statusUsoId", is(2))
             .body("marcaId", is(marcaId.intValue()))
             .body("corId", is(corId.intValue()));
+
+        given()
+            .when().get("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(200)
+            .contentType("image/png")
+            .header("Content-Length", is(String.valueOf(pngHeader.length)));
+
+        given()
+            .when().delete("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(204);
 
         given()
             .when().delete("/carros/" + carId)

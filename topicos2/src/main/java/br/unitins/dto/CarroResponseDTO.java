@@ -14,7 +14,8 @@ public record CarroResponseDTO(
     String categoriaNome,
     Long corId,
     String corNome,
-    String tonalidade
+    String tonalidade,
+    String imagemUrl
 ) {
 
     public static CarroResponseDTO valueOf(Carro carro) {
@@ -30,6 +31,7 @@ public record CarroResponseDTO(
                 carro.getCategoria().getNome(),
                 carro.getCor().getId(),
                 carro.getCor().getNome(),
-                carro.getCor().getTonalidade().getNOME());
+                carro.getCor().getTonalidade().getNOME(),
+                carro.isPossuiImagem() ? "/carros/" + carro.getId() + "/imagem" : null);
     }
 }

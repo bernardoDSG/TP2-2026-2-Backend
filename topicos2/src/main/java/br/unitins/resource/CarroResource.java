@@ -1,13 +1,17 @@
 package br.unitins.resource;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.dto.CarroResponseDTO;
 import br.unitins.model.Carro;
+import br.unitins.model.CarroImagem;
 import br.unitins.model.StatusUso;
 import br.unitins.service.CarroService;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -19,6 +23,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 
 @Path("/carros")
@@ -83,6 +90,38 @@ public class CarroResource {
     @POST
     public CarroResponseDTO create(CarroRequestDTO dto) {
         return CarroResponseDTO.valueOf(carroService.create(dto));
+    }
+
+    @POST
+    @Path("/{id}/imagem")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response uploadImagem(@PathParam("id") Long id, @RestForm("imagem") FileUpload imagem) throws IOException {
+        if (imagem == null || imagem.uploadedFile() == null) {
+            throw new BadRequestException("Selecione uma imagem para enviar.");
+        }
+        long size = Files.size(imagem.uploadedFile());
+        if (size > 5 * 1024 * 1024) {
+            throw new BadRequestException("A imagem deve ter no máximo 5 MB.");
+        }
+        carroService.saveImagem(id, Files.readAllBytes(imagem.uploadedFile()), imagem.contentType());
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/{id}/imagem")
+    @Produces({ "image/jpeg", "image/png", "image/gif", "image/webp" })
+    public Response buscarImagem(@PathParam("id") Long id) {
+        CarroImagem imagem = carroService.findImagem(id);
+        return Response.ok(imagem.getDados())
+                .type(imagem.getContentType())
+                .header("Cache-Control", "no-store")
+                .build();
+    }
+
+    @DELETE
+    @Path("/{id}/imagem")
+    public void excluirImagem(@PathParam("id") Long id) {
+        carroService.deleteImagem(id);
     }
 
     @PUT
