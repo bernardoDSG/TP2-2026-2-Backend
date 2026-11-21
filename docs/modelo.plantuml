@@ -1,0 +1,135 @@
+@startuml
+title Modelo de dados do backend
+hide methods
+skinparam classAttributeIconSize 0
+
+class Carro <<Entity>> {
+  nome : String
+  statusUso : StatusUso
+  possuiImagem : boolean
+  cor : Cor
+  marca : Marca
+  categoria : Categoria
+}
+
+class CarroImagem <<Entity>> {
+  carro : Carro
+  contentType : String
+  dados : byte[]
+}
+
+class Categoria <<Entity>> {
+  nome : String
+}
+
+class Cliente <<Entity>> {
+  nome : String
+  cpf : String
+  email : String
+  telefone : String
+  enderecos : List<Endereco>
+}
+
+class Cor <<Entity>> {
+  nome : String
+  tonalidade : Tonalidade
+}
+
+class DefaultEntity <<MappedSuperclass>> {
+  id : Long
+}
+
+class Endereco <<Entity>> {
+  cep : String
+  logradouro : String
+  numero : String
+  complemento : String
+  bairro : String
+  municipio : Municipio
+  cliente : Cliente
+}
+
+class Estado <<Entity>> {
+  nome : String
+  sigla : String
+}
+
+class Marca <<Entity>> {
+  nome : String
+}
+
+class Municipio <<Entity>> {
+  nome : String
+  estado : Estado
+}
+
+class Setor <<Entity>> {
+  nome : String
+  linhas : Integer
+  colunas : Integer
+  vagas : List<Vaga>
+}
+
+enum StatusUso {
+  SEMINOVO
+  USADO
+  ID : Long
+  NOME : String
+}
+
+enum TipoVaga {
+  NORMAL
+  COBERTA
+  PREFERENCIAL
+}
+
+enum Tonalidade {
+  CLARO
+  ESCURO
+  PURO
+  ID : Long
+  NOME : String
+}
+
+class Vaga <<Entity>> {
+  codigoVaga : String
+  linha : Integer
+  coluna : Integer
+  tipo : TipoVaga
+  setor : Setor
+  carro : Carro
+}
+
+DefaultEntity <|-- Carro
+DefaultEntity <|-- CarroImagem
+DefaultEntity <|-- Categoria
+DefaultEntity <|-- Cliente
+DefaultEntity <|-- Cor
+DefaultEntity <|-- Endereco
+DefaultEntity <|-- Estado
+DefaultEntity <|-- Marca
+DefaultEntity <|-- Municipio
+DefaultEntity <|-- Setor
+DefaultEntity <|-- Vaga
+
+Carro "0..*" --> "1" Cor : cor
+Carro "0..*" --> "1" Marca : marca
+Carro "0..*" --> "1" Categoria : categoria
+CarroImagem "0..1" --> "1" Carro : carro
+Cliente "1" *-- "0..*" Endereco : enderecos
+Endereco "0..*" --> "1" Municipio : municipio
+Municipio "0..*" --> "1" Estado : estado
+Setor "1" -- "0..*" Vaga : vagas
+Vaga "0..1" --> "0..1" Carro : ocupação
+Carro ..> StatusUso
+Cor ..> Tonalidade
+Vaga ..> TipoVaga
+
+note right of DefaultEntity
+  Chave primária gerada por IDENTITY.
+end note
+note right of CarroImagem
+  dados usa bytea no PostgreSQL.
+  carro_id é obrigatório e único.
+end note
+@enduml

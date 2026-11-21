@@ -22,9 +22,9 @@ public record CarroResponseDTO(
         return new CarroResponseDTO(
                 carro.getId(),
                 carro.getMarca().getNome() + " " + carro.getNome(),
-                carro.getStatusUso().name(),
+                carro.getStatusUso() == null ? null : carro.getStatusUso().name(),
                 carro.getNome(),
-                carro.getStatusUso().getId(),
+                carro.getStatusUso() == null ? null : carro.getStatusUso().getId(),
                 carro.getMarca().getId(),
                 carro.getMarca().getNome(),
                 carro.getCategoria().getId(),

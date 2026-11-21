@@ -6,6 +6,7 @@ import br.unitins.dto.CarroRequestDTO;
 import br.unitins.model.Carro;
 import br.unitins.model.CarroImagem;
 import br.unitins.model.Categoria;
+import br.unitins.model.Cor;
 import br.unitins.model.Marca;
 import br.unitins.model.StatusUso;
 import br.unitins.repository.CarroRepository;
@@ -17,6 +18,7 @@ import br.unitins.repository.VagaRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -81,18 +83,14 @@ public class CarroServiceImpl implements CarroService {
     @Transactional
     public Carro create(CarroRequestDTO dto) {
         Carro carro = new Carro();
-        carro.setNome(dto.nome());
-        carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
-        carro.setCor(corRepository.findById(dto.corId()));
-        carro.setMarca(findMarca(dto.marcaId()));
-        carro.setCategoria(findCategoria(dto.categoriaId()));
+        aplicarDados(carro, dto);
         carroRepository.persist(carro);
         return carro;
     }
 
     @Override
     public Carro findById(Long id) {
-        return carroRepository.findById(id);
+        return carroRepository.findByIdOptional(id).orElseThrow(() -> new NotFoundException("Carro não encontrado."));
     }
 
     @Override
@@ -106,8 +104,7 @@ public class CarroServiceImpl implements CarroService {
     @Override
     @Transactional
     public void saveImagem(Long id, byte[] dados, String contentType) {
-        Carro carro = carroRepository.findById(id);
-        if (carro == null) throw new NotFoundException("Carro não encontrado.");
+        Carro carro = buscarParaAlterarImagem(id);
         validateImage(dados, contentType);
         CarroImagem imagem = carroImagemRepository.find("carro.id", id).firstResult();
         if (imagem == null) {
@@ -123,8 +120,7 @@ public class CarroServiceImpl implements CarroService {
     @Override
     @Transactional
     public void deleteImagem(Long id) {
-        Carro carro = carroRepository.findById(id);
-        if (carro == null) throw new NotFoundException("Carro não encontrado.");
+        Carro carro = buscarParaAlterarImagem(id);
         carroImagemRepository.delete("carro.id", id);
         carro.setPossuiImagem(false);
     }
@@ -151,19 +147,32 @@ public class CarroServiceImpl implements CarroService {
     @Override
     @Transactional 
     public void update(Long id, CarroRequestDTO dto) {
-        Carro carro = carroRepository.findById(id);
-        if (carro == null)
-            return;
-        carro.setNome(dto.nome());
-        carro.setStatusUso(StatusUso.valueOf(dto.StatusUsoId()));
-        carro.setCor(corRepository.findById(dto.corId()));
-        carro.setMarca(findMarca(dto.marcaId()));
-        carro.setCategoria(findCategoria(dto.categoriaId()));
+        aplicarDados(findById(id), dto);
+    }
 
+    private Carro buscarParaAlterarImagem(Long id) {
+        return carroRepository.findByIdOptional(id, LockModeType.PESSIMISTIC_WRITE)
+                .orElseThrow(() -> new NotFoundException("Carro não encontrado."));
+    }
+
+    private void aplicarDados(Carro carro, CarroRequestDTO dto) {
+        if (dto == null) throw new BadRequestException("Informe os dados do carro.");
+        StatusUso status = StatusUso.valueOf(dto.StatusUsoId());
+        if (status == null) throw new BadRequestException("Informe um status de uso válido.");
+        Cor cor = dto.corId() == null ? null : corRepository.findById(dto.corId());
+        if (cor == null) throw new BadRequestException("Cor não encontrada.");
+        Marca marca = findMarca(dto.marcaId());
+        Categoria categoria = findCategoria(dto.categoriaId());
+
+        carro.setNome(dto.nome());
+        carro.setStatusUso(status);
+        carro.setCor(cor);
+        carro.setMarca(marca);
+        carro.setCategoria(categoria);
     }
 
     private Marca findMarca(Long marcaId) {
-        Marca marca = marcaRepository.findById(marcaId);
+        Marca marca = marcaId == null ? null : marcaRepository.findById(marcaId);
         if (marca == null) {
             throw new jakarta.ws.rs.BadRequestException("Marca não encontrada.");
         }
@@ -171,7 +180,7 @@ public class CarroServiceImpl implements CarroService {
     }
 
     private Categoria findCategoria(Long categoriaId) {
-        Categoria categoria = categoriaRepository.findById(categoriaId);
+        Categoria categoria = categoriaId == null ? null : categoriaRepository.findById(categoriaId);
         if (categoria == null) {
             throw new jakarta.ws.rs.BadRequestException("Categoria não encontrada.");
         }

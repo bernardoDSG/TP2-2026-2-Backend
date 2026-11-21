@@ -16,6 +16,37 @@ import io.restassured.http.ContentType;
 class CarroResourceTest {
 
     @Test
+    void rejectsInvalidCatalogDataAndPreservesExistingCar() {
+        var payload = new java.util.HashMap<String, Object>();
+        payload.put("nome", "Modelo de regressão");
+        payload.put("StatusUsoId", 1);
+        payload.put("corId", 1);
+        payload.put("marcaId", 1);
+        payload.put("categoriaId", 1);
+        String id = given().contentType(ContentType.JSON).body(payload).post("/carros")
+                .then().statusCode(200).extract().path("id").toString();
+        try {
+            payload.put("nome", "Cadastro inválido de regressão");
+            for (String campo : List.of("StatusUsoId", "corId")) {
+                for (Integer invalido : java.util.Arrays.asList(-1, null)) {
+                    payload.put(campo, invalido);
+                    given().contentType(ContentType.JSON).body(payload).post("/carros").then().statusCode(400);
+                    given().contentType(ContentType.JSON).body(payload).put("/carros/" + id).then().statusCode(400);
+                }
+                payload.put(campo, 1);
+            }
+            given().get("/carros/" + id).then().statusCode(200)
+                    .body("nomeCarro", is("Modelo de regressão")).body("statusUsoId", is(1)).body("corId", is(1));
+            given().pathParam("nome", payload.get("nome")).get("/carros/nome/{nome}")
+                    .then().statusCode(200).body("size()", is(0));
+        } finally {
+            given().delete("/carros/" + id).then().statusCode(204);
+        }
+        given().get("/carros/" + id).then().statusCode(404);
+        given().contentType(ContentType.JSON).body(payload).put("/carros/" + id).then().statusCode(404);
+    }
+
+    @Test
     void importedCarsHaveBundledPhotos() {
         for (String model : List.of("Corolla", "Civic", "Gol", "Onix", "HB20", "Argo", "Renegade", "Ka", "Kicks", "Kwid")) {
             Number carId = given()
@@ -34,7 +65,7 @@ class CarroResourceTest {
     }
 
     @Test
-    void returnsCarFieldsAndRelationshipIdsForEditing() {
+    void returnsCarFieldsAndRelationshipIdsForEditing() throws Exception {
         Number categoriaId = given()
             .contentType(ContentType.JSON)
             .body(Map.of("nome", "Categoria para teste de resposta"))
@@ -80,11 +111,19 @@ class CarroResourceTest {
         byte[] pngHeader = new byte[] {
             (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
         };
-        given()
-            .multiPart("imagem", "carro.png", pngHeader, "image/png")
-            .when().post("/carros/" + carId + "/imagem")
-            .then()
-            .statusCode(204);
+        try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var start = new java.util.concurrent.CountDownLatch(1);
+            java.util.concurrent.Callable<Integer> upload = () -> {
+                start.await();
+                return given().multiPart("imagem", "carro.png", pngHeader, "image/png")
+                        .post("/carros/" + carId + "/imagem").statusCode();
+            };
+            var first = executor.submit(upload);
+            var second = executor.submit(upload);
+            start.countDown();
+            org.junit.jupiter.api.Assertions.assertEquals(204, first.get());
+            org.junit.jupiter.api.Assertions.assertEquals(204, second.get());
+        }
 
         given()
             .when().get("/carros/" + carId)

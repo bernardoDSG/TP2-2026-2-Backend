@@ -6,7 +6,6 @@ import java.util.List;
 
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.dto.CarroResponseDTO;
-import br.unitins.model.Carro;
 import br.unitins.model.CarroImagem;
 import br.unitins.model.StatusUso;
 import br.unitins.service.CarroService;
@@ -83,8 +82,7 @@ public class CarroResource {
     @GET
     @Path("/{id}")
     public CarroResponseDTO buscarPorId(@PathParam("id") Long id) {
-        Carro carro = carroService.findById(id);
-        return carro == null ? null : CarroResponseDTO.valueOf(carro);
+        return CarroResponseDTO.valueOf(carroService.findById(id));
     }
 
     @POST
