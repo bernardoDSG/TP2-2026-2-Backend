@@ -1,8 +1,8 @@
 # Como executar o projeto
 
-Este tutorial explica como executar o frontend e o backend no Windows, sem
-Docker. Não é necessário criar conta em um serviço de nuvem nem cadastrar forma
-de pagamento.
+Este tutorial explica como executar o frontend e o backend no Windows ou no
+macOS, sem Docker. Não é necessário criar conta em um serviço de nuvem nem
+cadastrar forma de pagamento.
 
 ## 1. Pré-requisitos
 
@@ -16,7 +16,8 @@ Instale e deixe disponíveis no `PATH`:
 
 Extraia o ZIP mantendo as pastas do backend e do frontend. Os comandos abaixo
 devem ser executados dentro das respectivas pastas: `topicos2-backend` (a que
-contém `mvnw.cmd`) e `frontend-tp2` (a que contém `package.json`).
+contém `mvnw.cmd` no Windows e `mvnw` no macOS) e `frontend-tp2` (a que contém
+`package.json`).
 
 ## 2. Configure o banco de dados
 
@@ -91,9 +92,94 @@ npm start
 
 Abra `http://localhost:4200` no navegador.
 
-## 6. Encerrar
+## Executar no macOS
 
-Pressione Ctrl+C nos terminais do frontend, backend e SeaweedFS.
+Os comandos desta seção são executados no Terminal (zsh). Primeiro, confirme
+que o Java, Node.js, npm e PostgreSQL estão disponíveis:
+
+```sh
+java -version
+node --version
+npm --version
+```
+
+O Java deve ser a versão 25 e o PostgreSQL precisa estar iniciado e configurado
+conforme a seção 2. Execute o SQL de criação do banco com `psql` ou com uma
+ferramenta gráfica de administração do PostgreSQL, se ainda for necessário.
+
+### Inicie o armazenamento de imagens
+
+Na primeira execução, baixe e inicie o SeaweedFS oficial. O comando escolhe o
+arquivo correto para Apple Silicon (`arm64`, por exemplo, M1/M2/M3/M4) ou Mac
+Intel (`x86_64`) e valida seu SHA-256 antes de executá-lo:
+
+```sh
+VERSION=4.54
+case "$(uname -m)" in
+  arm64)
+    ASSET=darwin_arm64.tar.gz
+    SHA256=cba792274d5881fb3453291c3af53380c513e80e37aea29a2a25d20333eff325
+    ;;
+  x86_64)
+    ASSET=darwin_amd64.tar.gz
+    SHA256=c6a5129a2eb4d2c4e441c6e61dec7e1f2b822dcca9fd20dbe271c395a7b47d06
+    ;;
+  *)
+    echo "Arquitetura macOS não suportada: $(uname -m)"
+    exit 1
+    ;;
+esac
+
+SEAWEED_HOME="$HOME/Library/Application Support/SeaweedFS/$VERSION"
+SEAWEED_DATA="$HOME/Library/Application Support/SeaweedFS/data"
+ARCHIVE="$TMPDIR/$ASSET"
+mkdir -p "$SEAWEED_HOME" "$SEAWEED_DATA"
+
+curl -fL "https://github.com/seaweedfs/seaweedfs/releases/download/$VERSION/$ASSET" -o "$ARCHIVE"
+echo "$SHA256  $ARCHIVE" | shasum -a 256 -c -
+tar -xzf "$ARCHIVE" -C "$SEAWEED_HOME"
+chmod +x "$SEAWEED_HOME/weed"
+rm "$ARCHIVE"
+
+AWS_ACCESS_KEY_ID=admin AWS_SECRET_ACCESS_KEY=secret \
+  "$SEAWEED_HOME/weed" mini \
+  "-dir=$SEAWEED_DATA" -s3.port=8333 -bucket=car-images
+```
+
+Mantenha esse Terminal aberto enquanto estiver usando o site. O armazenamento
+S3 estará disponível em `http://localhost:8333`, e os arquivos persistirão em
+`~/Library/Application Support/SeaweedFS/data`.
+
+### Inicie o backend
+
+Abra outro Terminal, entre na pasta `topicos2-backend` extraída do ZIP e
+execute:
+
+```sh
+chmod +x ./mvnw
+./mvnw quarkus:dev
+```
+
+O `chmod` é necessário porque o arquivo do Maven Wrapper pode não manter a
+permissão de execução ao extrair o ZIP. Quando iniciar, a API estará em
+`http://localhost:8080`. Mantenha esse Terminal aberto.
+
+### Inicie o frontend
+
+Abra um terceiro Terminal, entre na pasta `frontend-tp2` extraída do ZIP e
+execute:
+
+```sh
+npm ci
+npm start
+```
+
+Abra `http://localhost:4200` no navegador.
+
+## Encerrar
+
+No Windows ou macOS, pressione Ctrl+C nos terminais do frontend, backend e
+SeaweedFS.
 
 ## Problemas comuns
 
