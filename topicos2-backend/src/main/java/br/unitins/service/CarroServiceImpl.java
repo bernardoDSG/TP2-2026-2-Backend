@@ -2,6 +2,7 @@ package br.unitins.service;
 
 import java.util.List;
 
+import br.unitins.dto.CarroImagemResponseDTO;
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.model.Carro;
 import br.unitins.model.CarroImagem;
@@ -33,6 +34,9 @@ public class CarroServiceImpl implements CarroService {
 
     @Inject
     CarroImagemRepository carroImagemRepository;
+
+    @Inject
+    ObjectStorageService objectStorageService;
 
     @Inject
     CorRepository corRepository;
@@ -94,11 +98,13 @@ public class CarroServiceImpl implements CarroService {
     }
 
     @Override
-    public CarroImagem findImagem(Long id) {
+    public CarroImagemResponseDTO findImagem(Long id) {
         if (carroRepository.findById(id) == null) throw new NotFoundException("Carro não encontrado.");
         CarroImagem imagem = carroImagemRepository.find("carro.id", id).firstResult();
         if (imagem == null) throw new NotFoundException("Este carro não possui imagem.");
-        return imagem;
+        return new CarroImagemResponseDTO(
+                imagem.getContentType(),
+                objectStorageService.getObject(imagem.getObjectKey()));
     }
 
     @Override
@@ -111,8 +117,10 @@ public class CarroServiceImpl implements CarroService {
             imagem = new CarroImagem();
             imagem.setCarro(carro);
         }
+        String objectKey = "carros/" + id + "/imagem";
+        objectStorageService.putObject(objectKey, dados, contentType);
         imagem.setContentType(contentType);
-        imagem.setDados(dados);
+        imagem.setObjectKey(objectKey);
         if (imagem.getId() == null) carroImagemRepository.persist(imagem);
         carro.setPossuiImagem(true);
     }
@@ -121,7 +129,11 @@ public class CarroServiceImpl implements CarroService {
     @Transactional
     public void deleteImagem(Long id) {
         Carro carro = buscarParaAlterarImagem(id);
-        carroImagemRepository.delete("carro.id", id);
+        CarroImagem imagem = carroImagemRepository.find("carro.id", id).firstResult();
+        if (imagem != null) {
+            objectStorageService.deleteObject(imagem.getObjectKey());
+            carroImagemRepository.delete(imagem);
+        }
         carro.setPossuiImagem(false);
     }
 
@@ -195,8 +207,14 @@ public class CarroServiceImpl implements CarroService {
                     "Remova o carro da vaga antes de excluí-lo.",
                     jakarta.ws.rs.core.Response.Status.CONFLICT);
         }
-        carroImagemRepository.delete("carro.id", id);
-        carroRepository.deleteById(id);
+        Carro carro = carroRepository.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Carro não encontrado."));
+        CarroImagem imagem = carroImagemRepository.find("carro.id", id).firstResult();
+        if (imagem != null) {
+            objectStorageService.deleteObject(imagem.getObjectKey());
+            carroImagemRepository.delete(imagem);
+        }
+        carroRepository.delete(carro);
 
     }
 

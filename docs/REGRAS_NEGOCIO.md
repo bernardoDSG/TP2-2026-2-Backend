@@ -10,7 +10,7 @@
 
 ### Imagem do carro
 
-Cada carro admite uma imagem. Faça `POST /carros/{id}/imagem` em multipart, com o arquivo no campo `imagem`. O serviço aceita de 1 byte a 5 MiB e verifica se a assinatura inicial corresponde ao MIME declarado de JPEG, PNG, GIF ou WebP. O serviço serializa envios e remoções de imagem do mesmo carro. Um novo envio substitui o conteúdo e ativa `possuiImagem`. A resposta do carro passa a incluir `imagemUrl`. O GET da mesma rota devolve os bytes com seu tipo de mídia ou 404 se faltar o carro ou a imagem. O DELETE remove a imagem e desativa o indicador.
+Cada carro admite uma imagem. Faça `POST /carros/{id}/imagem` em multipart, com o arquivo no campo `imagem`. O serviço aceita de 1 byte a 5 MiB e verifica se a assinatura inicial corresponde ao MIME declarado de JPEG, PNG, GIF ou WebP. O serviço serializa envios e remoções de imagem do mesmo carro. Um novo envio substitui o conteúdo e ativa `possuiImagem`. Os bytes ficam em armazenamento de objetos compatível com S3; no desenvolvimento local, o serviço é SeaweedFS, executado no Windows sem Docker. A tabela `carro_imagem` guarda a chave do objeto e o tipo MIME. A resposta do carro passa a incluir `imagemUrl`. O GET da mesma rota devolve os bytes com seu tipo de mídia ou 404 se faltar o carro ou a imagem. `GET /carros/{id}/imagem/download` baixa o arquivo com nome apropriado. O DELETE remove o objeto e seus metadados e desativa o indicador. Excluir o carro também exclui a imagem do armazenamento.
 
 ## Pátio e ocupação
 

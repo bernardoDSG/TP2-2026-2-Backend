@@ -4,6 +4,42 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
+Para o passo a passo de execução do projeto completo (backend, frontend,
+PostgreSQL e armazenamento de imagens sem Docker), consulte o
+[tutorial](../docs/COMO_EXECUTAR_PROJETO.md).
+
+## Armazenamento de imagens sem Docker
+
+As imagens dos carros são armazenadas em um serviço compatível com a API S3.
+Para desenvolvimento local, o projeto usa o SeaweedFS, gratuito e executado
+diretamente no Windows, sem Docker, cadastro em nuvem ou forma de pagamento.
+O PostgreSQL guarda somente a chave e o tipo MIME; os bytes ficam no bucket
+`car-images`.
+
+No PowerShell, na pasta `topicos2-backend`, inicie o armazenamento:
+
+```powershell
+.\start-storage.ps1
+```
+
+Na primeira execução, o script baixa o SeaweedFS 4.54 do repositório oficial,
+valida o SHA-256 e inicia o serviço. O executável e os dados ficam em
+`%LOCALAPPDATA%\SeaweedFS`, fora do repositório. Mantenha esse terminal aberto
+enquanto usar a aplicação; pressione Ctrl+C para encerrar.
+
+Com o armazenamento ativo, abra outro PowerShell na pasta `topicos2-backend` e
+inicie a API:
+
+```powershell
+.\mvnw.cmd quarkus:dev
+```
+
+O endpoint S3 é <http://localhost:8333> e o bucket é criado automaticamente.
+O SeaweedFS usa credenciais locais de desenvolvimento (`admin`/`secret`),
+configuradas pelo script. Para usar outro serviço S3, configure
+`S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY` e `S3_SECRET_KEY`.
+Os testes usam um adaptador em memória e não precisam iniciar o SeaweedFS.
+
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:

@@ -15,7 +15,7 @@ class Carro <<Entity>> {
 class CarroImagem <<Entity>> {
   carro : Carro
   contentType : String
-  dados : byte[]
+  objectKey : String
 }
 
 class Categoria <<Entity>> {
@@ -129,7 +129,8 @@ note right of DefaultEntity
   Chave primária gerada por IDENTITY.
 end note
 note right of CarroImagem
-  dados usa bytea no PostgreSQL.
+  objectKey referencia um objeto no armazenamento S3.
+  contentType descreve o tipo de mídia do objeto.
   carro_id é obrigatório e único.
 end note
 @enduml

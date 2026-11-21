@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import br.unitins.dto.CarroImagemResponseDTO;
 import br.unitins.dto.CarroRequestDTO;
 import br.unitins.dto.CarroResponseDTO;
-import br.unitins.model.CarroImagem;
 import br.unitins.model.StatusUso;
 import br.unitins.service.CarroService;
 import jakarta.inject.Inject;
@@ -109,11 +109,36 @@ public class CarroResource {
     @Path("/{id}/imagem")
     @Produces({ "image/jpeg", "image/png", "image/gif", "image/webp" })
     public Response buscarImagem(@PathParam("id") Long id) {
-        CarroImagem imagem = carroService.findImagem(id);
-        return Response.ok(imagem.getDados())
-                .type(imagem.getContentType())
-                .header("Cache-Control", "no-store")
-                .build();
+        return imagemResponse(id, false);
+    }
+
+    @GET
+    @Path("/{id}/imagem/download")
+    @Produces({ "image/jpeg", "image/png", "image/gif", "image/webp" })
+    public Response baixarImagem(@PathParam("id") Long id) {
+        return imagemResponse(id, true);
+    }
+
+    private Response imagemResponse(Long id, boolean download) {
+        CarroImagemResponseDTO imagem = carroService.findImagem(id);
+        Response.ResponseBuilder response = Response.ok(imagem.dados())
+                .type(imagem.contentType())
+                .header("Cache-Control", "no-store");
+        if (download) {
+            response.header("Content-Disposition",
+                    "attachment; filename=\"carro-" + id + "." + imageExtension(imagem.contentType()) + "\"");
+        }
+        return response.build();
+    }
+
+    private String imageExtension(String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/gif" -> "gif";
+            case "image/webp" -> "webp";
+            default -> throw new BadRequestException("Formato de imagem não suportado.");
+        };
     }
 
     @DELETE

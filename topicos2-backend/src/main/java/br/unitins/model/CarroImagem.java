@@ -15,16 +15,16 @@ public class CarroImagem extends DefaultEntity {
     @JoinColumn(name = "carro_id", nullable = false, unique = true)
     private Carro carro;
 
-    @Column(name = "content_type", nullable = false, length = 30)
+    @Column(name = "content_type", nullable = false, length = 100)
     private String contentType;
 
-    @Column(name = "dados", nullable = false, columnDefinition = "bytea")
-    private byte[] dados;
+    @Column(name = "object_key", nullable = false, unique = true, length = 255)
+    private String objectKey;
 
     public Carro getCarro() { return carro; }
     public void setCarro(Carro carro) { this.carro = carro; }
     public String getContentType() { return contentType; }
     public void setContentType(String contentType) { this.contentType = contentType; }
-    public byte[] getDados() { return dados; }
-    public void setDados(byte[] dados) { this.dados = dados; }
+    public String getObjectKey() { return objectKey; }
+    public void setObjectKey(String objectKey) { this.objectKey = objectKey; }
 }

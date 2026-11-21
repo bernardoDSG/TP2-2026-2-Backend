@@ -3,6 +3,8 @@ package br.unitins;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.List;
@@ -11,9 +13,13 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import jakarta.inject.Inject;
 
 @QuarkusTest
 class CarroResourceTest {
+
+    @Inject
+    InMemoryObjectStorageService objectStorageService;
 
     @Test
     void rejectsInvalidCatalogDataAndPreservesExistingCar() {
@@ -124,6 +130,7 @@ class CarroResourceTest {
             org.junit.jupiter.api.Assertions.assertEquals(204, first.get());
             org.junit.jupiter.api.Assertions.assertEquals(204, second.get());
         }
+        assertTrue(objectStorageService.containsObject("carros/" + carId + "/imagem"));
 
         given()
             .when().get("/carros/" + carId)
@@ -173,14 +180,39 @@ class CarroResourceTest {
             .header("Content-Length", is(String.valueOf(pngHeader.length)));
 
         given()
+            .when().get("/carros/" + carId + "/imagem/download")
+            .then()
+            .statusCode(200)
+            .contentType("image/png")
+            .header("Content-Disposition", is("attachment; filename=\"carro-" + carId + ".png\""));
+
+        given()
+            .multiPart("imagem", "invalida.png", new byte[] { 1, 2, 3 }, "image/png")
+            .when().post("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(400);
+
+        given()
             .when().delete("/carros/" + carId + "/imagem")
             .then()
             .statusCode(204);
+        assertFalse(objectStorageService.containsObject("carros/" + carId + "/imagem"));
 
+        given()
+            .when().get("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(404);
+
+        given()
+            .multiPart("imagem", "carro.png", pngHeader, "image/png")
+            .when().post("/carros/" + carId + "/imagem")
+            .then()
+            .statusCode(204);
         given()
             .when().delete("/carros/" + carId)
             .then()
             .statusCode(204);
+        assertFalse(objectStorageService.containsObject("carros/" + carId + "/imagem"));
         given()
             .when().delete("/cores/" + corId)
             .then()

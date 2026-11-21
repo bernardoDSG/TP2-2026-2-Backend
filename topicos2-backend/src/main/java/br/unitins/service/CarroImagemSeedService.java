@@ -35,6 +35,9 @@ public class CarroImagemSeedService {
     @Inject
     CarroImagemRepository carroImagemRepository;
 
+    @Inject
+    ObjectStorageService objectStorageService;
+
     @Transactional
     void carregarImagensIniciais(@Observes StartupEvent event) {
         IMAGENS.forEach(this::carregarImagemSeNecessario);
@@ -51,10 +54,13 @@ public class CarroImagemSeedService {
             if (imagemStream == null) {
                 throw new IllegalStateException("Imagem inicial não encontrada no classpath: " + resourcePath);
             }
+            byte[] dados = imagemStream.readAllBytes();
+            String objectKey = "carros/" + carro.getId() + "/imagem";
+            objectStorageService.putObject(objectKey, dados, "image/png");
             CarroImagem imagem = new CarroImagem();
             imagem.setCarro(carro);
             imagem.setContentType("image/png");
-            imagem.setDados(imagemStream.readAllBytes());
+            imagem.setObjectKey(objectKey);
             carroImagemRepository.persist(imagem);
             carro.setPossuiImagem(true);
         } catch (IOException e) {

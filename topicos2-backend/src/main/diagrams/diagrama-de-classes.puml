@@ -9,6 +9,12 @@ String nome
 StatusUso statusUso
 }
 
+class CarroImagem {
+Long id
+String contentType
+String objectKey
+}
+
 class Marca {
 Long id
 String nome
@@ -71,6 +77,8 @@ TipoVaga tipo
 Carro "0.." --> "1" Marca : marca
 Carro "0.." --> "1" Categoria : categoria
 Carro "0..*" --> "1" Cor : cor
+
+CarroImagem "0..1" --> "1" Carro : imagem
 
 Cliente "1" --> "0.." Endereco : enderecos
 Endereco "0.." --> "1" Municipio : municipio
