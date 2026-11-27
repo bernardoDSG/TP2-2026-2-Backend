@@ -5,6 +5,7 @@ import java.util.List;
 import br.unitins.dto.StatusUsoResponseDTO;
 import br.unitins.model.StatusUso;
 import br.unitins.service.StatusUsoService;
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/status-usos")
+@PermitAll
 @Produces(MediaType.APPLICATION_JSON)
 public class StatusUsoResource {
 

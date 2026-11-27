@@ -13,6 +13,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 
 @QuarkusTest
+@io.quarkus.test.security.TestSecurity(user = "admin", roles = "ADMIN")
 class ClienteResourceTest {
 
     private static final String CLIENTE_JSON = """

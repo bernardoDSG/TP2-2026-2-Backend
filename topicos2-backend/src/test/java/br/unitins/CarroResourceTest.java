@@ -16,6 +16,7 @@ import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 
 @QuarkusTest
+@io.quarkus.test.security.TestSecurity(user = "admin", roles = "ADMIN")
 class CarroResourceTest {
 
     @Inject

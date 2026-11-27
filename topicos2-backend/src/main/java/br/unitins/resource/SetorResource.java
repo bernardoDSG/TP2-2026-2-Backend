@@ -5,6 +5,7 @@ import java.util.List;
 import br.unitins.dto.SetorRequestDTO;
 import br.unitins.dto.SetorResponseDTO;
 import br.unitins.service.SetorService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -18,6 +19,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/setores")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SetorResource {

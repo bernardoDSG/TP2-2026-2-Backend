@@ -7,6 +7,8 @@ import br.unitins.dto.CorResponseDTO;
 import br.unitins.model.Cor;
 import br.unitins.model.Tonalidade;
 import br.unitins.service.CorService;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -21,6 +23,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/cores")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class CorResource {
@@ -29,17 +32,20 @@ public class CorResource {
     CorService corService;
 
     @GET
+    @PermitAll
     public List<CorResponseDTO> buscarTodas(@QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return corService.findAll(page, pageSize).stream().map(CorResponseDTO::valueOf).toList();
     }
 
     @GET
+    @PermitAll
     @Path("/nome/{nome}")
     public List<CorResponseDTO> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return corService.findByNome(nome, page, pageSize).stream().map(CorResponseDTO::valueOf).toList();
     }
 
     @GET
+    @PermitAll
     @Path("/tonalidade/{tonalidadeId}")
     public List<CorResponseDTO> buscarPorTonalidade(@PathParam("tonalidadeId") Long tonalidadeId,
             @QueryParam("page") @DefaultValue("0") Integer page,
@@ -48,6 +54,7 @@ public class CorResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}")
     public CorResponseDTO buscarPorId(@PathParam("id") Long id) {
         Cor cor = corService.findById(id);

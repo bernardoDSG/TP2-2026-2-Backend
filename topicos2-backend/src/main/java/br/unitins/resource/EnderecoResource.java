@@ -5,6 +5,7 @@ import java.util.List;
 import br.unitins.dto.EnderecoRequestDTO;
 import br.unitins.dto.EnderecoResponseDTO;
 import br.unitins.service.EnderecoService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -18,6 +19,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/enderecos")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class EnderecoResource {

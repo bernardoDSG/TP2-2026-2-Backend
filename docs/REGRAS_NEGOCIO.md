@@ -1,5 +1,13 @@
 # Regras de negócio
 
+## Autenticação e autorização
+
+1. As contas de acesso são mantidas no realm `ecommerce` do Keycloak. `POST /auth/register` recebe nome, e-mail e senha, cria a conta no provedor e atribui o papel `CLIENTE`; a senha nunca é salva no banco do e-commerce. E-mails duplicados retornam 409 e falhas de comunicação com o provedor retornam 503.
+2. O login é feito pelo formulário Angular, que envia e-mail e senha a `POST /auth/login`. O backend usa OIDC Direct Access Grant para autenticar no Keycloak e retorna access/refresh tokens somente em cookies HttpOnly, SameSite=Strict; o Angular não chama o Keycloak nem lê tokens. `GET /auth/me` retorna subject, nome, e-mail, usuário e papéis da sessão ou HTTP 401. `POST /auth/refresh` renova os cookies; `GET /auth/logout` revoga a sessão no Keycloak, remove os cookies e redireciona à aplicação.
+3. `ADMIN` pode operar todos os endpoints de gerenciamento (clientes, endereços, catálogo, território e pátio). `CLIENTE` pode navegar pelo catálogo público, mas não pode acessar operações administrativas (HTTP 403). Sem sessão, endpoints administrativos respondem HTTP 401. As leituras públicas incluem carros e suas imagens, marcas, categorias, cores e status de uso.
+4. O realm/client são importados e configurados pelos scripts PowerShell do backend, sem console gráfico. `configure-keycloak.ps1` cria o primeiro usuário `ADMIN` e concede `manage-users` à conta de serviço para habilitar o cadastro pela aplicação. O segredo do client é gerado localmente e nunca deve ser versionado ou enviado ao Angular.
+5. O Direct Access Grant recebe a senha no backend e é menos recomendado para aplicações de produção que Authorization Code com PKCE; mantenha HTTPS em produção e não registre credenciais em logs. Cookies de sessão não são persistidos no banco do e-commerce.
+
 ## Catálogo de veículos
 
 1. Cadastre marca, categoria e cor antes do carro. Cada carro pertence a exatamente uma de cada. A cor recebe um nome e um `tonalidadeId` (1 = claro, 2 = escuro, 3 = puro). O status de uso descreve a condição do carro (1 = seminovo, 2 = usado). A API expõe esses status em `/status-usos` e `/status-usos/{id}`.

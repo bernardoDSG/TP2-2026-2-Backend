@@ -5,6 +5,8 @@ import java.util.List;
 import br.unitins.dto.CategoriaRequestDTO;
 import br.unitins.dto.CategoriaResponseDTO;
 import br.unitins.service.CategoriaService;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,6 +21,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/categorias")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class CategoriaResource {
@@ -27,6 +30,7 @@ public class CategoriaResource {
     CategoriaService categoriaService;
 
     @GET
+    @PermitAll
     public List<CategoriaResponseDTO> buscarTodas(
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
@@ -34,6 +38,7 @@ public class CategoriaResource {
     }
 
     @GET
+    @PermitAll
     @Path("/nome/{nome}")
     public List<CategoriaResponseDTO> buscarPorNome(
             @PathParam("nome") String nome,
@@ -43,6 +48,7 @@ public class CategoriaResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}")
     public CategoriaResponseDTO buscarPorId(@PathParam("id") Long id) {
         var categoria = categoriaService.findById(id);

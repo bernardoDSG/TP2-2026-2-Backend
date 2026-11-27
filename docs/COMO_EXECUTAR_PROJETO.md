@@ -10,6 +10,7 @@ Instale e deixe disponíveis no `PATH`:
 
 - JDK 25;
 - PostgreSQL iniciado;
+- Keycloak 26+;
 - Node.js e npm;
 - conexão com a internet na primeira execução, para baixar as dependências e o
   SeaweedFS.
@@ -43,7 +44,56 @@ configuração fica em
 > `drop-and-create`. Ao iniciar o backend, as tabelas são recriadas e os dados
 > anteriores do banco são apagados. Use uma base local descartável.
 
-## 3. Inicie o armazenamento de imagens
+## 3. Configure e inicie o Keycloak sem console gráfico
+
+Baixe e extraia a distribuição do Keycloak 26+. Abra um PowerShell na pasta
+`topicos2-backend`, defina o caminho da distribuição e execute o script:
+
+```powershell
+$env:KEYCLOAK_HOME = "C:\caminho\para\keycloak"
+.\start-keycloak.ps1
+```
+
+Se o PowerShell bloquear a execução do script, permita-a somente na janela
+atual e tente novamente:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+O script solicita, sem exibir a senha, as credenciais administrativas iniciais
+do Keycloak, gera um segredo aleatório para o client e importa o realm
+`ecommerce` com os papéis `ADMIN` e `CLIENTE`. O segredo fica em
+`%LOCALAPPDATA%\ecommerce-keycloak\client-secret`, fora do repositório. O
+Keycloak permanece em execução nesse terminal na porta 8180. A importação
+automática cria um realm novo; para atualizar um realm que já existe, use o
+script de configuração abaixo.
+
+Em outro PowerShell, ainda na pasta `topicos2-backend`, crie a conta inicial
+`ADMIN` e configure a conta de serviço do backend sem usar a interface gráfica:
+
+```powershell
+$env:KEYCLOAK_HOME = "C:\caminho\para\keycloak"
+.\configure-keycloak.ps1 -AdminEmail "admin@exemplo.com"
+```
+
+O script pede a senha administrativa inicial do Keycloak e a senha da nova
+conta `ADMIN` de forma segura. Ele atualiza o segredo do client, habilita o
+Direct Access Grant, concede `manage-users` à conta de serviço e cria o usuário
+administrador no realm. Cadastros feitos pela aplicação recebem `CLIENTE`.
+
+O login acontece na tela do próprio projeto: Angular envia credenciais somente
+ao backend, que autentica no Keycloak e mantém os tokens em cookies HttpOnly,
+sem expô-los ao código Angular. O projeto usa OIDC Direct Access Grant para
+permitir esse formulário próprio; esse fluxo é menos recomendado para produção
+que Authorization Code com PKCE. Use HTTPS em produção e mantenha frontend e API
+no mesmo site para que os cookies SameSite=Strict sejam enviados.
+
+O realm usa `http://localhost:8180`, e a API usa `http://localhost:8080`. Para
+outros endereços, configure `KEYCLOAK_URL`, `KEYCLOAK_AUTH_SERVER_URL`,
+`KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `FRONTEND_URL` e `CORS_ORIGINS`.
+
+## 4. Inicie o armazenamento de imagens
 
 Abra um PowerShell na pasta `topicos2-backend` e execute:
 
@@ -65,18 +115,21 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\start-storage.ps1
 ```
 
-## 4. Inicie o backend
+## 5. Inicie o backend
 
 Abra um segundo PowerShell na mesma pasta `topicos2-backend` e execute:
 
 ```powershell
+$env:KEYCLOAK_CLIENT_SECRET = [System.IO.File]::ReadAllText(
+  (Join-Path $env:LOCALAPPDATA "ecommerce-keycloak\client-secret")
+)
 .\mvnw.cmd quarkus:dev
 ```
 
 Quando iniciar, a API estará disponível em `http://localhost:8080`. Mantenha
 esse terminal aberto.
 
-## 5. Inicie o frontend
+## 6. Inicie o frontend
 
 Abra um terceiro PowerShell na pasta `frontend-tp2` e instale as dependências:
 
@@ -91,6 +144,12 @@ npm start
 ```
 
 Abra `http://localhost:4200` no navegador.
+
+O catálogo de carros pode ser consultado sem login. Acesse **Entrar** para
+entrar com seu e-mail e senha pela tela do projeto ou **Cadastre-se** para criar
+uma conta com papel `CLIENTE`. As telas administrativas e seus endpoints exigem
+um usuário com papel `ADMIN`. O Angular envia cookies HttpOnly ao backend e não
+armazena senha, access token ou refresh token.
 
 ## Executar no macOS
 

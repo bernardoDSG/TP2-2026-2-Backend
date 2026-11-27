@@ -9,6 +9,8 @@ import br.unitins.dto.CarroRequestDTO;
 import br.unitins.dto.CarroResponseDTO;
 import br.unitins.model.StatusUso;
 import br.unitins.service.CarroService;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -28,6 +30,7 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 
 @Path("/carros")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class CarroResource {
@@ -36,18 +39,21 @@ public class CarroResource {
     CarroService carroService;
 
     @GET
+    @PermitAll
     public List<CarroResponseDTO> buscarTodos(
         @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return carroService.findAll(page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
+    @PermitAll
     @Path("/nome/{nome}")
     public List<CarroResponseDTO> buscarPorNome(@PathParam("nome") String nome, @QueryParam("page")  @DefaultValue("0") Integer page, @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
         return carroService.findByNome(nome, page, pageSize).stream().map(CarroResponseDTO::valueOf).toList();
     }
 
     @GET
+    @PermitAll
     @Path("/status-uso/{statusUsoId}")
     public List<CarroResponseDTO> buscarPorStatusUso(@PathParam("statusUsoId") Long statusUsoId,
             @QueryParam("page") @DefaultValue("0") Integer page,
@@ -56,6 +62,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/cor/{corId}")
     public List<CarroResponseDTO> buscarPorCor(@PathParam("corId") Long corId,
             @QueryParam("page") @DefaultValue("0") Integer page,
@@ -64,6 +71,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/marca/{marcaId}")
     public List<CarroResponseDTO> buscarPorMarca(@PathParam("marcaId") Long marcaId,
             @QueryParam("page") @DefaultValue("0") Integer page,
@@ -72,6 +80,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/categoria/{categoriaId}")
     public List<CarroResponseDTO> buscarPorCategoria(@PathParam("categoriaId") Long categoriaId,
             @QueryParam("page") @DefaultValue("0") Integer page,
@@ -80,6 +89,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}")
     public CarroResponseDTO buscarPorId(@PathParam("id") Long id) {
         return CarroResponseDTO.valueOf(carroService.findById(id));
@@ -106,6 +116,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}/imagem")
     @Produces({ "image/jpeg", "image/png", "image/gif", "image/webp" })
     public Response buscarImagem(@PathParam("id") Long id) {
@@ -113,6 +124,7 @@ public class CarroResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}/imagem/download")
     @Produces({ "image/jpeg", "image/png", "image/gif", "image/webp" })
     public Response baixarImagem(@PathParam("id") Long id) {

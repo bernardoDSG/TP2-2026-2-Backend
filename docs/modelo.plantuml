@@ -128,6 +128,7 @@ Vaga ..> TipoVaga
 note right of DefaultEntity
   Chave primária gerada por IDENTITY.
 end note
+note "Identidades, credenciais e papeis ficam no Keycloak. Tokens de sessao ficam em cookies HttpOnly do backend; o banco do e-commerce nao armazena senhas nem tokens." as AuthNote
 note right of CarroImagem
   objectKey referencia um objeto no armazenamento S3.
   contentType descreve o tipo de mídia do objeto.

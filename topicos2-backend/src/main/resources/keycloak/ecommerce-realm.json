@@ -1,0 +1,44 @@
+{
+  "realm": "ecommerce",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "defaultRoles": [
+    "CLIENTE"
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Administra o catálogo, clientes e pátio"
+      },
+      {
+        "name": "CLIENTE",
+        "description": "Acessa as funcionalidades de cliente"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ecommerce-backend",
+      "name": "E-commerce Backend",
+      "enabled": true,
+      "secret": "__KEYCLOAK_CLIENT_SECRET__",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ]
+    }
+  ]
+}

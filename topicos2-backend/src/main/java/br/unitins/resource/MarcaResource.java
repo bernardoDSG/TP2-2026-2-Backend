@@ -5,6 +5,8 @@ import java.util.List;
 import br.unitins.dto.MarcaRequestDTO;
 import br.unitins.dto.MarcaResponseDTO;
 import br.unitins.service.MarcaService;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -19,6 +21,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/marcas")
+@RolesAllowed("ADMIN")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class MarcaResource {
@@ -27,6 +30,7 @@ public class MarcaResource {
     MarcaService marcaService;
 
     @GET
+    @PermitAll
     public List<MarcaResponseDTO> buscarTodas(
             @QueryParam("page") @DefaultValue("0") Integer page,
             @QueryParam("pageSize") @DefaultValue("5") Integer pageSize) {
@@ -34,6 +38,7 @@ public class MarcaResource {
     }
 
     @GET
+    @PermitAll
     @Path("/nome/{nome}")
     public List<MarcaResponseDTO> buscarPorNome(
             @PathParam("nome") String nome,
@@ -43,6 +48,7 @@ public class MarcaResource {
     }
 
     @GET
+    @PermitAll
     @Path("/{id}")
     public MarcaResponseDTO buscarPorId(@PathParam("id") Long id) {
         var marca = marcaService.findById(id);
