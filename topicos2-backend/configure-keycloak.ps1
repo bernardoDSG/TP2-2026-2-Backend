@@ -63,9 +63,9 @@ $client = @(Convert-JsonOutput $clientResults)[0]
 if (-not $client.id) {
     throw 'Client ecommerce-backend nao encontrado no realm ecommerce.'
 }
-$client.secret = $clientSecret
-$client.directAccessGrantsEnabled = $true
-$client.standardFlowEnabled = $false
+$client | Add-Member -MemberType NoteProperty -Name secret -Value $clientSecret -Force
+$client | Add-Member -MemberType NoteProperty -Name directAccessGrantsEnabled -Value $true -Force
+$client | Add-Member -MemberType NoteProperty -Name standardFlowEnabled -Value $false -Force
 $clientFile = Join-Path $env:LOCALAPPDATA 'ecommerce-keycloak\client.json'
 $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($clientFile, ($client | ConvertTo-Json -Depth 100), $utf8WithoutBom)
@@ -76,6 +76,39 @@ try {
     }
 } finally {
     Remove-Item -LiteralPath $clientFile -Force -ErrorAction SilentlyContinue
+}
+
+$clientScopesResults = & $kcadm get client-scopes -r ecommerce
+if ($LASTEXITCODE -ne 0) {
+    throw 'Nao foi possivel consultar os escopos do realm ecommerce.'
+}
+$adminApiScope = @(Convert-JsonOutput $clientScopesResults | Where-Object { $_.name -eq 'kc-admin-api' })[0]
+if (-not $adminApiScope.id) {
+    throw 'Escopo kc-admin-api nao encontrado. Use Keycloak 26.8.2 ou superior.'
+}
+
+$assignedClientScopesResults = & $kcadm get "clients/$($client.id)/default-client-scopes" -r ecommerce
+if ($LASTEXITCODE -ne 0) {
+    throw 'Nao foi possivel consultar os escopos padrao do client ecommerce-backend.'
+}
+$hasAdminApiScope = @(Convert-JsonOutput $assignedClientScopesResults | ForEach-Object { $_.name }) -contains 'kc-admin-api'
+if (-not $hasAdminApiScope) {
+    $scopeUpdateOutput = & $kcadm update "clients/$($client.id)/default-client-scopes/$($adminApiScope.id)" -r ecommerce 2>&1
+    $scopeUpdateExitCode = $LASTEXITCODE
+
+    # This endpoint returns 204 with no body; kcadm can report that as an error after applying it.
+    $assignedClientScopesResults = & $kcadm get "clients/$($client.id)/default-client-scopes" -r ecommerce
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Nao foi possivel verificar os escopos padrao do client ecommerce-backend.'
+    }
+    $hasAdminApiScope = @(Convert-JsonOutput $assignedClientScopesResults | ForEach-Object { $_.name }) -contains 'kc-admin-api'
+    if (-not $hasAdminApiScope) {
+        $scopeUpdateError = ($scopeUpdateOutput | Out-String).Trim()
+        if ($scopeUpdateError) {
+            throw "Nao foi possivel associar o escopo kc-admin-api ao client ecommerce-backend (codigo kcadm: $scopeUpdateExitCode): $scopeUpdateError"
+        }
+        throw "Nao foi possivel associar o escopo kc-admin-api ao client ecommerce-backend (codigo kcadm: $scopeUpdateExitCode)."
+    }
 }
 
 $serviceAccount = 'service-account-ecommerce-backend'
@@ -121,6 +154,8 @@ if (-not $admin.id) {
         enabled = $true
         emailVerified = $true
         firstName = 'Administrador'
+        lastName = 'Administrador'
+        requiredActions = @()
         credentials = @(@{
             type = 'password'
             value = $adminPassword
@@ -146,6 +181,30 @@ if (-not $admin.id) {
     }
     $admin = @(Convert-JsonOutput $adminResults | Where-Object { $_.username -eq $AdminEmail })[0]
 }
+
+$adminDetailsResults = & $kcadm get "users/$($admin.id)" -r ecommerce
+if ($LASTEXITCODE -ne 0) {
+    throw "Nao foi possivel carregar os detalhes de $AdminEmail."
+}
+$adminDetails = Convert-JsonOutput $adminDetailsResults
+$adminDetails | Add-Member -MemberType NoteProperty -Name firstName -Value 'Administrador' -Force
+$adminDetails | Add-Member -MemberType NoteProperty -Name lastName -Value 'Administrador' -Force
+$adminDetails | Add-Member -MemberType NoteProperty -Name requiredActions -Value @() -Force
+$adminUpdateFile = Join-Path $env:LOCALAPPDATA 'ecommerce-keycloak\admin-user-update.json'
+[System.IO.File]::WriteAllText(
+    $adminUpdateFile,
+    ($adminDetails | ConvertTo-Json -Depth 100),
+    $utf8WithoutBom
+)
+try {
+    & $kcadm update "users/$($admin.id)" -r ecommerce -f $adminUpdateFile
+    if ($LASTEXITCODE -ne 0) {
+        throw "Nao foi possivel remover acoes pendentes da conta $AdminEmail."
+    }
+} finally {
+    Remove-Item -LiteralPath $adminUpdateFile -Force -ErrorAction SilentlyContinue
+}
+
 $adminRoles = & $kcadm get "users/$($admin.id)/role-mappings/realm" -r ecommerce
 if ($LASTEXITCODE -ne 0) {
     throw "Nao foi possivel consultar os papeis de $AdminEmail."
@@ -158,4 +217,4 @@ if (-not $hasAdminRole) {
     }
 }
 
-Write-Host "Client e papeis configurados. $AdminEmail possui ADMIN."
+Write-Host "Client, escopo Admin API e papeis configurados. $AdminEmail possui ADMIN."

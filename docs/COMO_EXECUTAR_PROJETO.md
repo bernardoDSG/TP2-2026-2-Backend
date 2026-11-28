@@ -10,7 +10,7 @@ Instale e deixe disponíveis no `PATH`:
 
 - JDK 25;
 - PostgreSQL iniciado;
-- Keycloak 26+;
+- Keycloak 26.8.2 ou superior;
 - Node.js e npm;
 - conexão com a internet na primeira execução, para baixar as dependências e o
   SeaweedFS.
@@ -79,8 +79,10 @@ $env:KEYCLOAK_HOME = "C:\caminho\para\keycloak"
 
 O script pede a senha administrativa inicial do Keycloak e a senha da nova
 conta `ADMIN` de forma segura. Ele atualiza o segredo do client, habilita o
-Direct Access Grant, concede `manage-users` à conta de serviço e cria o usuário
-administrador no realm. Cadastros feitos pela aplicação recebem `CLIENTE`.
+Direct Access Grant, associa o escopo padrão `kc-admin-api` ao client do backend,
+concede `manage-users` à conta de serviço e cria o usuário administrador no
+realm. O escopo é necessário para a validação de audiência da Admin REST API no
+Keycloak 26.8.2 ou superior. Cadastros feitos pela aplicação recebem `CLIENTE`.
 
 O login acontece na tela do próprio projeto: Angular envia credenciais somente
 ao backend, que autentica no Keycloak e mantém os tokens em cookies HttpOnly,
@@ -249,4 +251,15 @@ SeaweedFS.
 - **Porta em uso:** as portas padrão são `5432` (PostgreSQL), `8333`
   (armazenamento), `8080` (backend) e `4200` (frontend). Feche a aplicação que
   estiver usando a porta necessária.
+- **Erro de propriedade ao configurar o client Keycloak**
+  (`secret` ou `directAccessGrantsEnabled`): execute novamente
+  `configure-keycloak.ps1` com o mesmo administrador inicial. O segredo gerado
+  foi preservado em `%LOCALAPPDATA%\ecommerce-keycloak\client-secret`.
+- **Login informa “Account is not fully set up”:** execute novamente
+  `configure-keycloak.ps1` com a mesma conta `ADMIN`. O script completa o nome
+  e sobrenome e remove ações obrigatórias pendentes, sem alterar a senha.
+- **Cadastro retorna 503 e o backend registra HTTP 401 do Keycloak:** execute
+  novamente `configure-keycloak.ps1` com o administrador inicial. O script
+  associa o escopo `kc-admin-api` exigido pela Admin REST API no Keycloak
+  26.8.2 ou superior. Depois, reinicie o backend para obter um token atualizado.
 - **Comando `npm` não encontrado:** instale Node.js e abra um novo terminal.

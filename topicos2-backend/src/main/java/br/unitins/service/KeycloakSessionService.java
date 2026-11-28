@@ -19,6 +19,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.ServiceUnavailableException;
+import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class KeycloakSessionService {
@@ -131,6 +132,7 @@ public class KeycloakSessionService {
     }
 
     private ServiceUnavailableException unavailable(String message, Throwable cause) {
-        return new ServiceUnavailableException(message, cause);
+        Response response = Response.status(Response.Status.SERVICE_UNAVAILABLE).entity(message).build();
+        return new ServiceUnavailableException(response, cause);
     }
 }
