@@ -156,17 +156,179 @@ armazena senha, access token ou refresh token.
 ## Executar no macOS
 
 Os comandos desta seção são executados no Terminal (zsh). Primeiro, confirme
-que o Java, Node.js, npm e PostgreSQL estão disponíveis:
+que o JDK 25, Node.js, npm e PostgreSQL estão instalados e disponíveis. A
+configuração do Keycloak usa `jq` para ler as respostas da CLI; instale-o, por
+exemplo, com `brew install jq`.
 
 ```sh
 java -version
 node --version
 npm --version
+psql --version
+jq --version
 ```
 
-O Java deve ser a versão 25 e o PostgreSQL precisa estar iniciado e configurado
-conforme a seção 2. Execute o SQL de criação do banco com `psql` ou com uma
-ferramenta gráfica de administração do PostgreSQL, se ainda for necessário.
+O Java deve ser a versão 25. Inicie o serviço PostgreSQL e, se o banco ainda
+não existir, conecte-se como administrador (`psql postgres` em uma instalação
+Homebrew, ou `psql -U postgres` se essa conta existir) e execute:
+
+```sql
+CREATE ROLE topicos2 WITH LOGIN PASSWORD '123456';
+CREATE DATABASE topicos2db OWNER topicos2;
+```
+
+Mantenha os valores conforme a configuração em
+`topicos2-backend/src/main/resources/application.properties`. O backend usa
+`drop-and-create`, então as tabelas e os dados do banco são recriados ao iniciar.
+
+### Inicie e configure o Keycloak
+
+Baixe e extraia a distribuição do Keycloak 26.8.2 ou superior. Neste exemplo,
+ela está em `~/Applications/keycloak-26.8.2`; ajuste o caminho se necessário.
+Para baixar a versão 26.8.2 do repositório oficial:
+
+```sh
+KEYCLOAK_VERSION=26.8.2
+mkdir -p "$HOME/Applications"
+curl -fL "https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz" \
+  -o "$TMPDIR/keycloak-$KEYCLOAK_VERSION.tar.gz"
+tar -xzf "$TMPDIR/keycloak-$KEYCLOAK_VERSION.tar.gz" -C "$HOME/Applications"
+rm "$TMPDIR/keycloak-$KEYCLOAK_VERSION.tar.gz"
+```
+
+Os comandos abaixo partem da pasta `topicos2-backend`, dentro da pasta extraída
+do ZIP. Substitua `/caminho/para/projeto-ecommerce` pelo local onde o extraiu:
+
+```sh
+set -e
+cd /caminho/para/projeto-ecommerce/topicos2-backend
+export KEYCLOAK_HOME="$HOME/Applications/keycloak-26.8.2"
+test -x "$KEYCLOAK_HOME/bin/kc.sh"
+
+SECRET_DIR="$HOME/Library/Application Support/ecommerce-keycloak"
+mkdir -p "$SECRET_DIR" "$KEYCLOAK_HOME/data/import"
+chmod 700 "$SECRET_DIR"
+umask 077
+
+if [ ! -f "$SECRET_DIR/client-secret" ]; then
+  openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n' > "$SECRET_DIR/client-secret"
+fi
+CLIENT_SECRET="$(cat "$SECRET_DIR/client-secret")"
+sed "s/__KEYCLOAK_CLIENT_SECRET__/$CLIENT_SECRET/g" \
+  src/main/resources/keycloak/ecommerce-realm.json \
+  > "$KEYCLOAK_HOME/data/import/ecommerce-realm.json"
+chmod 600 "$SECRET_DIR/client-secret" "$KEYCLOAK_HOME/data/import/ecommerce-realm.json"
+```
+
+No mesmo Terminal, informe as credenciais administrativas iniciais e inicie o
+Keycloak. Ele fica em execução na porta 8180; mantenha esse Terminal aberto:
+
+```sh
+printf 'Usuário administrador inicial do Keycloak: '
+read -r KC_BOOTSTRAP_ADMIN_USERNAME
+printf 'Senha do administrador inicial do Keycloak: '
+read -rs KC_BOOTSTRAP_ADMIN_PASSWORD
+printf '\n'
+export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD
+
+"$KEYCLOAK_HOME/bin/kc.sh" start-dev --http-port=8180 --import-realm
+```
+
+Em outro Terminal, entre novamente na pasta `topicos2-backend`, defina o
+caminho do Keycloak e carregue o segredo criado acima. O bloco seguinte
+configura o client, concede à conta de serviço a permissão necessária para
+cadastrar usuários e cria a conta inicial `ADMIN`:
+
+```sh
+set -e
+cd /caminho/para/projeto-ecommerce/topicos2-backend
+export KEYCLOAK_HOME="$HOME/Applications/keycloak-26.8.2"
+SECRET_FILE="$HOME/Library/Application Support/ecommerce-keycloak/client-secret"
+test -s "$SECRET_FILE"
+export KEYCLOAK_CLIENT_SECRET="$(cat "$SECRET_FILE")"
+KCADM="$KEYCLOAK_HOME/bin/kcadm.sh"
+
+printf 'Usuário administrador inicial do Keycloak: '
+read -r KC_BOOTSTRAP_ADMIN_USERNAME
+printf 'Senha do administrador inicial do Keycloak: '
+read -rs KC_BOOTSTRAP_ADMIN_PASSWORD
+printf '\n'
+"$KCADM" config credentials --server http://localhost:8180 --realm master \
+  --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
+
+CLIENT_ID="$("$KCADM" get clients -r ecommerce -q 'clientId=ecommerce-backend' | jq -r '.[0].id // empty')"
+if [ -z "$CLIENT_ID" ]; then
+  echo "Client ecommerce-backend não encontrado no realm ecommerce." >&2
+  exit 1
+fi
+"$KCADM" update "clients/$CLIENT_ID" -r ecommerce \
+  -s "secret=$KEYCLOAK_CLIENT_SECRET" \
+  -s directAccessGrantsEnabled=true \
+  -s standardFlowEnabled=false
+
+ADMIN_SCOPE_ID="$("$KCADM" get client-scopes -r ecommerce | jq -r '.[] | select(.name == "kc-admin-api") | .id' | head -n 1)"
+if [ -z "$ADMIN_SCOPE_ID" ]; then
+  echo "Escopo kc-admin-api não encontrado. Use Keycloak 26.8.2 ou superior." >&2
+  exit 1
+fi
+if ! "$KCADM" get "clients/$CLIENT_ID/default-client-scopes" -r ecommerce \
+  | jq -e 'any(.[]; .name == "kc-admin-api")' >/dev/null; then
+  SCOPE_UPDATE_STATUS=0
+  "$KCADM" update "clients/$CLIENT_ID/default-client-scopes/$ADMIN_SCOPE_ID" \
+    -r ecommerce || SCOPE_UPDATE_STATUS=$?
+  if ! "$KCADM" get "clients/$CLIENT_ID/default-client-scopes" -r ecommerce \
+    | jq -e 'any(.[]; .name == "kc-admin-api")' >/dev/null; then
+    echo "Não foi possível associar o escopo kc-admin-api (kcadm: $SCOPE_UPDATE_STATUS)." >&2
+    exit 1
+  fi
+fi
+
+SERVICE_ACCOUNT="service-account-ecommerce-backend"
+SERVICE_ACCOUNT_ID="$("$KCADM" get users -r ecommerce -q "username=$SERVICE_ACCOUNT" | jq -r '.[0].id // empty')"
+MANAGEMENT_CLIENT_ID="$("$KCADM" get clients -r ecommerce -q 'clientId=realm-management' | jq -r '.[0].id // empty')"
+if [ -z "$SERVICE_ACCOUNT_ID" ] || [ -z "$MANAGEMENT_CLIENT_ID" ]; then
+  echo "Conta de serviço ou client realm-management não encontrado." >&2
+  exit 1
+fi
+if ! "$KCADM" get "users/$SERVICE_ACCOUNT_ID/role-mappings/clients/$MANAGEMENT_CLIENT_ID" \
+  -r ecommerce | jq -e 'any(.[]; .name == "manage-users")' >/dev/null; then
+  "$KCADM" add-roles -r ecommerce --uusername "$SERVICE_ACCOUNT" \
+    --cclientid realm-management --rolename manage-users
+fi
+
+ADMIN_EMAIL="admin@exemplo.com"
+ADMIN_ID="$("$KCADM" get users -r ecommerce -q "username=$ADMIN_EMAIL" \
+  | jq -r --arg username "$ADMIN_EMAIL" '.[] | select(.username == $username) | .id' | head -n 1)"
+if [ -z "$ADMIN_ID" ]; then
+  "$KCADM" create users -r ecommerce \
+    -s "username=$ADMIN_EMAIL" -s "email=$ADMIN_EMAIL" \
+    -s enabled=true -s emailVerified=true \
+    -s firstName=Administrador -s lastName=Administrador
+  printf 'Crie a senha da conta ADMIN %s: ' "$ADMIN_EMAIL"
+  read -rs ADMIN_PASSWORD
+  printf '\n'
+  "$KCADM" set-password -r ecommerce --username "$ADMIN_EMAIL" \
+    --new-password "$ADMIN_PASSWORD"
+  ADMIN_ID="$("$KCADM" get users -r ecommerce -q "username=$ADMIN_EMAIL" \
+    | jq -r --arg username "$ADMIN_EMAIL" '.[] | select(.username == $username) | .id' | head -n 1)"
+  if [ -z "$ADMIN_ID" ]; then
+    echo "Não foi possível localizar a conta ADMIN criada." >&2
+    exit 1
+  fi
+fi
+"$KCADM" update "users/$ADMIN_ID" -r ecommerce \
+  -s firstName=Administrador -s lastName=Administrador -s 'requiredActions=[]'
+if ! "$KCADM" get "users/$ADMIN_ID/role-mappings/realm" -r ecommerce \
+  | jq -e 'any(.[]; .name == "ADMIN")' >/dev/null; then
+  "$KCADM" add-roles -r ecommerce --uusername "$ADMIN_EMAIL" --rolename ADMIN
+fi
+unset KC_BOOTSTRAP_ADMIN_PASSWORD ADMIN_PASSWORD
+echo "$ADMIN_EMAIL está configurado com o papel ADMIN."
+```
+
+Se a conta ADMIN já existir, o bloco preserva a senha atual e garante o papel
+`ADMIN`, atualizando também o perfil e removendo ações obrigatórias pendentes.
+Para criar uma conta diferente, altere `ADMIN_EMAIL` antes de executar.
 
 ### Inicie o armazenamento de imagens
 
@@ -214,9 +376,11 @@ S3 estará disponível em `http://localhost:8333`, e os arquivos persistirão em
 ### Inicie o backend
 
 Abra outro Terminal, entre na pasta `topicos2-backend` extraída do ZIP e
-execute:
+carregue o segredo do client Keycloak antes de iniciar:
 
 ```sh
+test -s "$HOME/Library/Application Support/ecommerce-keycloak/client-secret"
+export KEYCLOAK_CLIENT_SECRET="$(cat "$HOME/Library/Application Support/ecommerce-keycloak/client-secret")"
 chmod +x ./mvnw
 ./mvnw quarkus:dev
 ```
@@ -239,8 +403,8 @@ Abra `http://localhost:4200` no navegador.
 
 ## Encerrar
 
-No Windows ou macOS, pressione Ctrl+C nos terminais do frontend, backend e
-SeaweedFS.
+No Windows ou macOS, pressione Ctrl+C nos terminais do frontend, backend,
+SeaweedFS e Keycloak.
 
 ## Problemas comuns
 
@@ -252,14 +416,16 @@ SeaweedFS.
   (armazenamento), `8080` (backend) e `4200` (frontend). Feche a aplicação que
   estiver usando a porta necessária.
 - **Erro de propriedade ao configurar o client Keycloak**
-  (`secret` ou `directAccessGrantsEnabled`): execute novamente
-  `configure-keycloak.ps1` com o mesmo administrador inicial. O segredo gerado
-  foi preservado em `%LOCALAPPDATA%\ecommerce-keycloak\client-secret`.
+  (`secret` ou `directAccessGrantsEnabled`): no Windows, execute novamente
+  `configure-keycloak.ps1` com o mesmo administrador inicial. No macOS, repita
+  os comandos de configuração do Keycloak desta seção. O segredo local é
+  preservado no diretório `ecommerce-keycloak` do usuário.
 - **Login informa “Account is not fully set up”:** execute novamente
-  `configure-keycloak.ps1` com a mesma conta `ADMIN`. O script completa o nome
-  e sobrenome e remove ações obrigatórias pendentes, sem alterar a senha.
+  `configure-keycloak.ps1` no Windows ou repita a configuração pela CLI no
+  macOS; confirme que a conta tem nome, sobrenome e nenhuma ação obrigatória
+  pendente.
 - **Cadastro retorna 503 e o backend registra HTTP 401 do Keycloak:** execute
-  novamente `configure-keycloak.ps1` com o administrador inicial. O script
-  associa o escopo `kc-admin-api` exigido pela Admin REST API no Keycloak
-  26.8.2 ou superior. Depois, reinicie o backend para obter um token atualizado.
+  novamente a configuração do Keycloak apropriada ao sistema. Ela associa o
+  escopo `kc-admin-api` exigido pela Admin REST API no Keycloak 26.8.2 ou
+  superior. Depois, reinicie o backend para obter um token atualizado.
 - **Comando `npm` não encontrado:** instale Node.js e abra um novo terminal.
